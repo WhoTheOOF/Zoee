@@ -192,10 +192,6 @@ class Embed(commands.Cog):
                 else:
                     return await interaction.followup.send("😥 Va bene, non mandero' l'embed, ripeti il procedimento da capo..", ephemeral=True)
 
-        @create.error
-        async def say_error(interaction: discord.Interaction):
-            await interaction.response.send_message(f"Non hai il permesso di usare questo comando.", ephemeral=True)
-
         @app_commands.command(description="Modifica un'embed gia' inviato nel server!")
         @app_commands.check(is_staff)
         async def modifica(self, interaction: discord.Interaction):
