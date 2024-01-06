@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import time
+from discord import NotFound
 
 class EmbedModal(discord.ui.Modal, title="Clicca qui!"):
     EMBED_ID = discord.ui.TextInput(
@@ -38,6 +39,38 @@ class EmbedModal(discord.ui.Modal, title="Clicca qui!"):
         required=False,
         placeholder="Non inserire nulla per non modificarlo.",
     )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        
+        msg = None
+        etitle = self.EMBED_TITLE if self.EMBED_TITLE != None else None
+        edesc = self.EMBED_DESC if self.EMBED_DESC != None else None
+        eimg = self.EMBED_IMG if self.EMBED_IMG != None else None
+        eauthor = self.EMBED_AUTH if self.EMBED_AUTH != None else None
+        
+        edited_embed = discord.Embed(color = 0xffc0cb)
+        
+        if etitle:
+            edited_embed.title = etitle.value
+        if edesc:
+            edited_embed.description = edesc.value
+        if eimg:
+            edited_embed.set_thumbnail(url=eimg if eimg.value.startswith("https://") and eimg.value.endswith(".png") else None)
+        if eauthor:
+            edited_embed.set_author(name=eauthor.value)
+        
+        for channel in interaction.guild.channels:
+            try:
+                msg = await channel.get_message(int(self.EMBED_ID.value))
+            except NotFound:
+                continue
+
+        if msg != None:
+            await msg.edit(embed=edited_embed)
+            return await interaction.response.send_message(f"✅ Modificato con successo! **`(ID: {int(self.EMBED_ID.value)})`**")
+        elif msg == None:
+            return await interaction.response.send_message(f"🔺Embed non trovato, prova di nuovo. **`(ID: {int(self.EMBED_ID.value)})`**")
+        return await interaction.response.send_message(f"🔺Qualcosa e' andato storto.. riprova. **`(ID: {int(self.EMBED_ID.value)})`**")
 
 class viewButtons(discord.ui.View):
         
@@ -161,7 +194,6 @@ class Embed(commands.Cog):
         async def modifica(self, interaction: discord.Interaction):
             e_modal = EmbedModal()
             await interaction.response.send_modal(e_modal)
-             
                 
         @create.error
         async def say_error(interaction: discord.Interaction):
