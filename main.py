@@ -10,6 +10,7 @@ intents.message_content = True
 
 class Selene(commands.Bot):
     async def setup_hook(self):
+        await self.load_extension("jishaku")
         for cog_file in os.listdir("./cogs"):
             if cog_file.endswith(".py"):
                 await self.load_extension(f"cogs.{cog_file[:-3]}")
