@@ -13,30 +13,30 @@ class EmbedModal(discord.ui.Modal, title="Clicca qui!"):
     
     EMBED_TITLE = discord.ui.TextInput(
         style=discord.TextStyle.short,
-        label="NUOVO TITOLO",
+        label="NUOVO TITOLO EMBED",
         required=False,
-        placeholder="Inserisci qui il titolo nuovo dell'embed (non inserire nulla per non modificarlo).",
+        placeholder="Non inserire nulla per non modificarlo.",
     )
     
     EMBED_DESC = discord.ui.TextInput(
         style=discord.TextStyle.short,
-        label="NUOVA DESCRIZIONE",
+        label="NUOVA DESCRIZIONE EMBED",
         required=False,
-        placeholder="Inserisci qui la nuova descrizione dell'embed (non inserire nulla per non modificarla).",
+        placeholder="Non inserire nulla per non modificarla.",
     )
     
     EMBED_IMG = discord.ui.TextInput(
         style=discord.TextStyle.short,
-        label="NUOVA IMMAGINE",
+        label="LINK NUOVA IMMAGINE EMBED",
         required=False,
-        placeholder="Inserisci qui il link della nuova immagine per l'embed (non inserire nulla per non modificarla).",
+        placeholder="Non inserire nulla per non modificarla.",
     )
     
     EMBED_AUTH = discord.ui.TextInput(
         style=discord.TextStyle.short,
-        label="NUOVO TESTO AUTHOR",
+        label="NUOVO TESTO AUTHOR EMBED",
         required=False,
-        placeholder="Inserisci qui il nuovo testo author (non inserire nulla per non modificarlo).",
+        placeholder="Non inserire nulla per non modificarlo.",
     )
 
 class viewButtons(discord.ui.View):
