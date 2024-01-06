@@ -3,6 +3,77 @@ from discord.ext import commands
 from discord import app_commands
 import time
 
+class EmbedModal(discord.ui.Modal, title="Clicca qui!"):
+    EMBED_ID = discord.ui.TextInput(
+        style=discord.TextStyle.short,
+        label="EMBED ID",
+        required=False,
+        placeholder="Inserisci qui l'ID dell'embed da modificare!",
+    )
+    
+    EMBED_TITLE = discord.ui.TextInput(
+        style=discord.TextStyle.short,
+        label="NUOVO TITOLO EMBED",
+        required=False,
+        placeholder="Non inserire nulla per non modificarlo.",
+    )
+    
+    EMBED_DESC = discord.ui.TextInput(
+        style=discord.TextStyle.short,
+        label="NUOVA DESCRIZIONE EMBED",
+        required=False,
+        placeholder="Non inserire nulla per non modificarla.",
+    )
+    
+    EMBED_IMG = discord.ui.TextInput(
+        style=discord.TextStyle.short,
+        label="LINK NUOVA IMMAGINE EMBED",
+        required=False,
+        placeholder="Non inserire nulla per non modificarla.",
+    )
+    
+    EMBED_AUTH = discord.ui.TextInput(
+        style=discord.TextStyle.short,
+        label="NUOVO TESTO AUTHOR EMBED",
+        required=False,
+        placeholder="Non inserire nulla per non modificarlo.",
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        
+        msg = None
+        etitle = self.EMBED_TITLE if self.EMBED_TITLE != None else None
+        edesc = self.EMBED_DESC if self.EMBED_DESC != None else None
+        eimg = self.EMBED_IMG if self.EMBED_IMG != None else None
+        eauthor = self.EMBED_AUTH if self.EMBED_AUTH != None else None
+        
+        edited_embed = discord.Embed(color = 0xffc0cb)
+        
+        if etitle:
+            edited_embed.title = etitle.value
+        if edesc:
+            edited_embed.description = edesc.value
+        if eimg:
+            edited_embed.set_thumbnail(url=eimg if eimg.value.startswith("https://") and eimg.value.endswith(".png") else None)
+        if eauthor:
+            edited_embed.set_author(name=eauthor.value)
+        
+        for channel in interaction.guild.channels:
+            try:
+                msg = await channel.get_message(int(self.EMBED_ID.value))
+            except Exception:
+                continue
+
+        if msg != None:
+            await msg.edit(embed=edited_embed)
+            return await interaction.response.send_message(f"✅ Modificato con successo! **`(ID: {int(self.EMBED_ID.value)})`**")
+        elif msg == None:
+            return await interaction.response.send_message(f"🔺 Embed non trovato, prova di nuovo. **`(ID: {int(self.EMBED_ID.value)})`**")
+        return await interaction.response.send_message(f"🔺 Qualcosa e' andato storto.. riprova. **`(ID: {int(self.EMBED_ID.value)})`**")
+
+    async def on_error(self, interaction: discord.Interaction, error):
+        ...
+
 class viewButtons(discord.ui.View):
         
     checkmark : bool = None
@@ -36,7 +107,7 @@ class Embed(commands.Cog):
                 return message.author == interaction.user and message.channel == interaction.channel
 
             await interaction.response.send_message("✅ Perfetto! Ora scrivi qui in chat il titolo che vorresti per l'embed! (Se non vuoi un titolo, scrivi 'nessuno')", ephemeral=True)
-            title = await self.bot.wait_for('message', check=check)
+            title = await interaction.client.wait_for('message', check=check)
         
             embed = discord.Embed(color=0xffc0cb)
             embed.set_footer(text=f"Oggi alle {time.strftime('%H:%M')}")
@@ -49,7 +120,7 @@ class Embed(commands.Cog):
                 await interaction.followup.send("✅ Ottimo, inviero' un'embed senza titolo, ora manda la descrizione! (Se non vuoi una descrizione, scrivi 'nessuna')", ephemeral=True)      
             await title.delete()
                 
-            desc = await self.bot.wait_for('message', check=check)
+            desc = await interaction.client.wait_for('message', check=check)
             if not desc.content == "nessuna":
                 embed = discord.Embed(description=desc.content, color=0xffc0cb)
                 embed.set_footer(text=f"Oggi alle {time.strftime('%H:%M')}")
@@ -58,7 +129,7 @@ class Embed(commands.Cog):
                 await interaction.followup.send("✅ Va bene, niente descrizione! Vuoi aggiungere anche il testo nella sezione autore? (Se non vuoi un testo autore, scrivi 'nessuno')", ephemeral=True)
             await desc.delete()
             
-            auth = await self.bot.wait_for('message', check=check)
+            auth = await interaction.client.wait_for('message', check=check)
             if not auth.content == "nessuno":
                 embed.set_author(name=auth.content)
                 await interaction.followup.send("✅ Superbo! Un'immagine la mettiamo? (Se non vuoi un'immagine, scrivi 'no')", ephemeral=True)
@@ -66,7 +137,7 @@ class Embed(commands.Cog):
                 await interaction.followup.send("✅ Okok, niente autore. Un'immagine la mettiamo? Manda un link :) (Se non vuoi un'immagine, scrivi 'no')", ephemeral=True)
             await auth.delete()
                 
-            img = await self.bot.wait_for('message', check=check)
+            img = await interaction.client.wait_for('message', check=check)
             if not img.content == "no":
                 await img.delete()
                 embed.set_thumbnail(url=img.content)
@@ -82,12 +153,12 @@ class Embed(commands.Cog):
                 
                 if view.checkmark == True:
                     await interaction.followup.send("✅ Spettacolare! Ora dimmi in che canale devo mandarlo, menzionalo. (Assicurati che io possa mandare messaggi in quel canale)", ephemeral=True)
-                    channel = await self.bot.wait_for('message', check=check)
+                    channel = await interaction.client.wait_for('message', check=check)
                     if channel.content.startswith("<#") and channel.content.endswith(">"):
                         await channel.delete()
                         await interaction.followup.send("✅ Sei mitic*! L'embed e' stato inviato con successo!", ephemeral=True)
                         int_ch = channel.content.translate({ord(i): None for i in '<#>'})
-                        ch = self.bot.get_channel(int(int_ch))
+                        ch = interaction.client.get_channel(int(int_ch))
                         return await ch.send(embed=embed)
                     else:
                         await channel.delete()
@@ -107,12 +178,12 @@ class Embed(commands.Cog):
                 
                 if view.checkmark == True:
                     await interaction.followup.send("✅ Spettacolare! Ora dimmi in che canale devo mandarlo, menzionalo. (Assicurati che io possa mandare messaggi in quel canale)", ephemeral=True)
-                    channel = await self.bot.wait_for('message', check=check)
+                    channel = await interaction.client.wait_for('message', check=check)
                     if channel.content.startswith("<#") and channel.content.endswith(">"):
                         await channel.delete()
                         await interaction.followup.send("✅ Sei mitic*! L'embed e' stato inviato con successo!", ephemeral=True)
                         int_ch = channel.content.translate({ord(i): None for i in '<#>'})
-                        ch = self.bot.get_channel(int(int_ch))
+                        ch = interaction.client.get_channel(int(int_ch))
                         return await ch.send(embed=embed)
                     else:
                         await channel.delete()
