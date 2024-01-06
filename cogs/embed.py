@@ -93,7 +93,7 @@ class viewButtons(discord.ui.View):
 
 def is_staff(interaction: discord.Interaction):
     allowed_members_ids = ["144126010642792449", "695661153388331118"]
-    if str(interaction.user.id) in allowed_members_ids:
+    if interaction.user.id in allowed_members_ids:
         return True
     return False
 
