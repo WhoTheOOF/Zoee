@@ -3,6 +3,42 @@ from discord.ext import commands
 from discord import app_commands
 import time
 
+class EmbedModal(discord.ui.Modal, title="Clicca qui!"):
+    EMBED_ID = discord.ui.TextInput(
+        style=discord.TextStyle.short,
+        label="EMBED ID",
+        required=False,
+        placeholder="Inserisci qui l'ID dell'embed da modificare!",
+    )
+    
+    EMBED_TITLE = discord.ui.TextInput(
+        style=discord.TextStyle.short,
+        label="NUOVO TITOLO",
+        required=False,
+        placeholder="Inserisci qui il titolo nuovo dell'embed (non inserire nulla per non modificarlo).",
+    )
+    
+    EMBED_DESC = discord.ui.TextInput(
+        style=discord.TextStyle.short,
+        label="NUOVA DESCRIZIONE",
+        required=False,
+        placeholder="Inserisci qui la nuova descrizione dell'embed (non inserire nulla per non modificarla).",
+    )
+    
+    EMBED_IMG = discord.ui.TextInput(
+        style=discord.TextStyle.short,
+        label="NUOVA IMMAGINE",
+        required=False,
+        placeholder="Inserisci qui il link della nuova immagine per l'embed (non inserire nulla per non modificarla).",
+    )
+    
+    EMBED_AUTH = discord.ui.TextInput(
+        style=discord.TextStyle.short,
+        label="NUOVO TESTO AUTHOR",
+        required=False,
+        placeholder="Inserisci qui il nuovo testo author (non inserire nulla per non modificarlo).",
+    )
+
 class viewButtons(discord.ui.View):
         
     checkmark : bool = None
@@ -119,6 +155,18 @@ class Embed(commands.Cog):
                         return await interaction.followup.send(f"Canale non valido, rifai da capo.", ephemeral=True)
                 else:
                     return await interaction.followup.send("😥 Va bene, non mandero' l'embed, ripeti il procedimento da capo..", ephemeral=True)
+                
+        @app_commands.command(description="Crea velocemente un'embed da inviare in un canale a tua scelta :)")
+        @app_commands.check(is_staff)     
+        async def modifica(self, interaction: discord.Interaction):
+            
+            e_modal = EmbedModal()
+            
+            msg = None
+            e_id = None
+             
+            await interaction.response.send_modal(e_modal)
+             
                 
         @create.error
         async def say_error(interaction: discord.Interaction):
