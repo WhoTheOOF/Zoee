@@ -157,7 +157,7 @@ class Embed(commands.Cog):
                     return await interaction.followup.send("😥 Va bene, non mandero' l'embed, ripeti il procedimento da capo..", ephemeral=True)
                 
         @app_commands.command(description="Crea velocemente un'embed da inviare in un canale a tua scelta :)")
-        @app_commands.check(is_staff)     
+        @app_commands.check(is_staff)
         async def modifica(self, interaction: discord.Interaction):
             
             e_modal = EmbedModal()
