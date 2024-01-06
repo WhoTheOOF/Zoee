@@ -4,6 +4,7 @@ from discord import app_commands
 import time
 from discord import NotFound
 
+"""
 class EmbedModal(discord.ui.Modal, title="Clicca qui!"):
     EMBED_ID = discord.ui.TextInput(
         style=discord.TextStyle.short,
@@ -74,6 +75,7 @@ class EmbedModal(discord.ui.Modal, title="Clicca qui!"):
 
     async def on_error(self, interaction: discord.Interaction, error):
         ...
+"""
 
 class viewButtons(discord.ui.View):
         
@@ -98,7 +100,7 @@ def is_staff(interaction: discord.Interaction):
 class Embed(commands.Cog):
 
     def __init__(self, bot):
-        self.bot= bot
+        self.bot = bot
     
     class EmbedGroup(app_commands.Group):
         @app_commands.command(description="Crea velocemente un'embed da inviare in un canale a tua scelta :)")
