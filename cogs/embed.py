@@ -72,6 +72,9 @@ class EmbedModal(discord.ui.Modal, title="Clicca qui!"):
             return await interaction.response.send_message(f"🔺Embed non trovato, prova di nuovo. **`(ID: {int(self.EMBED_ID.value)})`**")
         return await interaction.response.send_message(f"🔺Qualcosa e' andato storto.. riprova. **`(ID: {int(self.EMBED_ID.value)})`**")
 
+    async def on_error(self, interaction: discord.Interaction, error):
+        ...
+
 class viewButtons(discord.ui.View):
         
     checkmark : bool = None
