@@ -55,7 +55,7 @@ class viewButtons(discord.ui.View):
 
 def is_staff(interaction: discord.Interaction):
     allowed_members_ids = ["144126010642792449", "695661153388331118"]
-    if interaction.user.id in allowed_members_ids:
+    if str(interaction.user.id) in allowed_members_ids:
         return True
     return False
 
@@ -156,15 +156,10 @@ class Embed(commands.Cog):
                 else:
                     return await interaction.followup.send("😥 Va bene, non mandero' l'embed, ripeti il procedimento da capo..", ephemeral=True)
                 
-        @app_commands.command(description="Crea velocemente un'embed da inviare in un canale a tua scelta :)")
+        @app_commands.command(description="Modifica un'embed gia' inviato nel server!")
         @app_commands.check(is_staff)
         async def modifica(self, interaction: discord.Interaction):
-            
             e_modal = EmbedModal()
-            
-            msg = None
-            e_id = None
-             
             await interaction.response.send_modal(e_modal)
              
                 
