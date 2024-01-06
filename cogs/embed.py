@@ -194,11 +194,11 @@ class Embed(commands.Cog):
                 else:
                     return await interaction.followup.send("😥 Va bene, non mandero' l'embed, ripeti il procedimento da capo..", ephemeral=True)
 
-        @app_commands.command(description="Modifica un'embed gia' inviato nel server!")
-        @app_commands.check(is_staff)
-        async def modifica(self, interaction: discord.Interaction):
-            e_modal = EmbedModal()
-            await interaction.response.send_modal(e_modal)
+    @app_commands.command(description="Modifica un'embed gia' inviato nel server!")
+    @app_commands.check(is_staff)
+    async def modifica(self, interaction: discord.Interaction):
+        #e_modal = EmbedModal()
+        await interaction.response.send_modal(e_modal)
         
 async def setup(bot: commands.Bot):
     bot.tree.add_command(Embed.EmbedGroup(name="embed"))
