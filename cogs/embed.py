@@ -2,15 +2,9 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import time
+from discord import NotFound
 
-class EmbedModal(discord.ui.Modal, title="Clicca qui!"):
-    EMBED_ID = discord.ui.TextInput(
-        style=discord.TextStyle.short,
-        label="EMBED ID",
-        required=False,
-        placeholder="Inserisci qui l'ID dell'embed da modificare!",
-    )
-    
+class EmbedModal(discord.ui.Modal, title="Clicca qui!"): 
     EMBED_TITLE = discord.ui.TextInput(
         style=discord.TextStyle.short,
         label="NUOVO TITOLO EMBED",
@@ -58,21 +52,17 @@ class EmbedModal(discord.ui.Modal, title="Clicca qui!"):
         if eauthor:
             edited_embed.set_author(name=eauthor.value)
         
-        for channel in interaction.guild.channels:
-            try:
-                msg = await channel.get_message(int(self.EMBED_ID.value))
-            except Exception:
-                continue
+        cha = interaction.client.get_channel(int(self.ch))
+        msg = await cha.fetch_message(int(self.id))
 
         if msg != None:
             await msg.edit(embed=edited_embed)
-            return await interaction.response.send_message(f"✅ Modificato con successo! **`(ID: {int(self.EMBED_ID.value)})`**")
+            return await interaction.response.send_message(f"✅ Modificato con successo! **`(ID: {int(self.id)})`**", ephemeral=True)
         elif msg == None:
-            return await interaction.response.send_message(f"🔺 Embed non trovato, prova di nuovo. **`(ID: {int(self.EMBED_ID.value)})`**")
-        return await interaction.response.send_message(f"🔺 Qualcosa e' andato storto.. riprova. **`(ID: {int(self.EMBED_ID.value)})`**")
+            return await interaction.response.send_message(f"🔺 Embed non trovato, prova di nuovo. **`(ID: {int(self.id)})`**", ephemeral=True)
 
     async def on_error(self, interaction: discord.Interaction, error):
-        ...
+        await interaction.response.send_message(f"🔺 Qualcosa e' andato storto.. riprova. **`(ID: {int(self.id)})`**\n{error}", ephemeral=True)
 
 class viewButtons(discord.ui.View):
         
@@ -90,7 +80,7 @@ class viewButtons(discord.ui.View):
 
 def is_staff(interaction: discord.Interaction):
     allowed_members_ids = ["144126010642792449", "695661153388331118"]
-    if interaction.user.id in allowed_members_ids:
+    if str(interaction.user.id) in allowed_members_ids:
         return True
     return False
 
@@ -100,7 +90,8 @@ class Embed(commands.Cog):
         self.bot= bot
     
     class EmbedGroup(app_commands.Group):
-        @app_commands.command(description="Crea velocemente un'embed da inviare in un canale a tua scelta :)")
+        
+        @app_commands.command(description="Crea velocemente un'embed da inviare in un canale a tua scelta (sempre se funziona) :)")
         @app_commands.check(is_staff)
         async def create(self, interaction: discord.Interaction):
             def check(message):
@@ -190,10 +181,14 @@ class Embed(commands.Cog):
                         return await interaction.followup.send(f"Canale non valido, rifai da capo.", ephemeral=True)
                 else:
                     return await interaction.followup.send("😥 Va bene, non mandero' l'embed, ripeti il procedimento da capo..", ephemeral=True)
-                
-        @create.error
-        async def say_error(interaction: discord.Interaction):
-            await interaction.response.send_message(f"Non hai il permesso di usare questo comando.", ephemeral=True)
+
+        @app_commands.command(description="Modifica un'embed gia' inviato nel server!")
+        @app_commands.check(is_staff)
+        async def modifica(self, interaction: discord.Interaction, id_canale: str, embed_id: str):
+            e_modal = EmbedModal()
+            e_modal.id = embed_id
+            e_modal.ch = id_canale
+            await interaction.response.send_modal(e_modal)   
         
 async def setup(bot: commands.Bot):
     bot.tree.add_command(Embed.EmbedGroup(name="embed"))

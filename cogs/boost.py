@@ -34,8 +34,13 @@ class Boost(commands.Cog):
                 await message.author.add_roles(db)
                 return await channel.send(embed=double_boost_embed)
             else:
-                return await channel.send(embed=server_boost_embed)     
-
+                return await channel.send(embed=server_boost_embed)
+    
+    @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        if before.premium_since is not None and after.premium_since is None:
+            db = discord.utils.get(after.guild.roles, id=1192951322350190783)
+            await self.bot.remove_roles(after, db)
 
 async def setup(bot):
     await bot.add_cog(Boost(bot))

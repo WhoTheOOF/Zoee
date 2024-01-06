@@ -8,10 +8,6 @@ from typing import Literal, Optional
 intents = discord.Intents.all()
 intents.message_content = True
 
-os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
-os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
-os.environ["JISHAKU_FORCE_PAGINATOR"] = "True"
-
 class Selene(commands.Bot):
     async def setup_hook(self):
         await self.load_extension("jishaku")
