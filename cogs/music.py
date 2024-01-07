@@ -7,6 +7,8 @@ from discord import app_commands
 import time
 import datetime
 import typing
+from pagination import Pagination
+import settings
 
 class Music(commands.Cog):
 
@@ -94,8 +96,10 @@ class Music(commands.Cog):
 
             if isinstance(tracks, wavelink.Playlist):
                 # tracks is a playlist...
+                for track in tracks:
+                    track.extras = {"requester": interaction.user.mention}
                 added: int = await player.queue.put_wait(tracks)
-                await interaction.response.send_message(f"<a:hellokittywave:1193495028874608773> Aggiunta la playlist **`{tracks.name}`** ({added} traccie) alla coda.")
+                await interaction.response.send_message(f"<a:hellokittywave:1193495028874608773> Aggiunta la playlist **[{tracks.name}]({tracks.url})** ({added} traccie) alla coda.")
             else:
                 track: wavelink.Playable = tracks[0]
                 track.extras = {"requester": interaction.user.mention}
@@ -147,7 +151,7 @@ class Music(commands.Cog):
                 elif nome_filtro.lower() == "boost":
                     filters.equalizer.set(bands=[{
                         "band":1,
-                        "gain": 0.75
+                        "gain": 0.25
                     }])
                     
                 elif nome_filtro.lower() == "vibrato":
@@ -157,7 +161,7 @@ class Music(commands.Cog):
                     filters.rotation.set(rotation_hz=0.4)
                     
                 elif nome_filtro.lower() == "distortion":
-                    filters.distortion.set(offset=0.5, scale=0.7)
+                    filters.distortion.set(sin_offset=0.2, sin_scale=0.9, cos_offset=0.4, cos_scale=0.7, tan_offset=1.8, tan_scale=1.3, offset=0.6, scale=2.7)
                     
                 await player.set_filters(filters)
                 await interaction.response.send_message(f"<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha impostato il filtro **`{nome_filtro.upper()}`**.")
@@ -211,7 +215,7 @@ class Music(commands.Cog):
 
 
         @app_commands.command(description="Disconnetti il bot dalla vocale")
-        async def disconnect(self, interaction: discord.Interaction) -> None:
+        async def stop(self, interaction: discord.Interaction) -> None:
             """Disconnect the Player."""
             player: wavelink.Player = cast(wavelink.Player, interaction.guild.voice_client)
             if not player:
@@ -221,29 +225,48 @@ class Music(commands.Cog):
             await interaction.response.send_message(f"<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha disconnesso il bot.")
             
         @app_commands.command(description="Visualizza tutte le canzoni in coda")
-        async def queue(self, interaction: discord.Interaction) -> None:
+        async def queue(self, interaction: discord.Interaction, svuota: typing.Optional[str]) -> None:
             """Check the queue."""
             player: wavelink.Player = cast(wavelink.Player, interaction.guild.voice_client)
             if not player:
                 return
-
-            embed = discord.Embed(description = f"# <a:hellokittyshake:1193495018078482512> CODA CANZONI <a:hellokittyshake:1193495018078482512> # \n", color=0xffc0cb)
-            embed.set_author(name=f"{interaction.guild.name} Musica", icon_url=interaction.guild.icon.url)
             
-            index = 0
+            if len(player.queue) <= 1:
+                return await interaction.response.send_message(f"<a:8319hellokittyno:1193495006170861588> E' presente solo una canzone al momento, che e' quella corrente.")
             
-            for item in player.queue:
+            if svuota:
+                if svuota.lower() == "svuota la queue.":
+                    player.queue.clear()
+                    return await interaction.response.send_message(f"<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha svuotato la queue.")
+            
+            async def get_page(page: int):
+                emb = discord.Embed(description = f"# <a:hellokittyshake:1193495018078482512> CODA CANZONI <a:hellokittyshake:1193495018078482512> # \n", color=0xffc0cb)
+                offset = (page-1) * settings.MAX_EMBED_LENGHT
                 
-                seconds = item.length/1000
-                b = int((seconds % 3600)//60)
-                c = int((seconds % 3600) % 60)
-                dt = datetime.time(0, b, c)
+                index = 0
                 
-                index = index + 1
-                
-                embed.add_field(name=f"{index}) {item.author}", value=f"- {item.extras.requester} ৻ [{item.title}]({item.uri}) | `{dt.strftime('%M:%S')}`", inline=False)
+                for item in player.queue[offset: offset+settings.MAX_EMBED_LENGHT]:
+                    seconds = item.length/1000
+                    b = int((seconds % 3600)//60)
+                    c = int((seconds % 3600) % 60)
+                    dt = datetime.time(0, b, c)
+                    index = index + 1
+                    emb.description += f"**`{index}`**) **{item.author}** ↪ Da: {item.extras.requester}\n- [{item.title}]({item.uri}) | `{dt.strftime('%M:%S')}`\n\n"
+                    
+                emb.set_author(name=f"{interaction.guild.name} Musica", icon_url=interaction.guild.icon.url)
+                n = Pagination.compute_total_pages(len(player.queue), settings.MAX_EMBED_LENGHT)
+                emb.set_footer(text=f"Pagina {page}/{n}")
+                return emb, n
 
-            await interaction.response.send_message(embed=embed)
+            await Pagination(interaction, get_page).navegate()
+
+        @queue.autocomplete("svuota")
+        async def queue_auto(self, interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
+            data = []
+            for option in ["Svuota la queue.", "Non svuotare la queue."]:
+                if current.lower() in option.lower():
+                    data.append(app_commands.Choice(name=option.upper(), value=option.upper()))
+            return data
 
 
 async def setup(bot: commands.Bot):
