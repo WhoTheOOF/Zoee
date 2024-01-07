@@ -4,6 +4,9 @@ import time
 import settings
 import os
 from typing import Literal, Optional
+import wavelink
+import logging
+from typing import cast
 
 intents = discord.Intents.all()
 intents.message_content = True
@@ -15,6 +18,37 @@ class Selene(commands.Bot):
             if cog_file.endswith(".py"):
                 await self.load_extension(f"cogs.{cog_file[:-3]}")
                 print(f"Caricato {cog_file}.")
+                
+        nodes = [wavelink.Node(uri="https://localhost:2333", password="youshallnotpass")]
+
+        # cache_capacity is EXPERIMENTAL. Turn it off by passing None
+        await wavelink.Pool.connect(nodes=nodes, client=self, cache_capacity=100)
+
+    async def on_wavelink_node_ready(self, payload: wavelink.NodeReadyEventPayload) -> None:
+        logging.info(f"Wavelink Node connected: {payload.node!r} | Resumed: {payload.resumed}")
+
+    async def on_wavelink_track_start(self, payload: wavelink.TrackStartEventPayload) -> None:
+        player: wavelink.Player | None = payload.player
+        if not player:
+            # Handle edge cases...
+            return
+
+        original: wavelink.Playable | None = payload.original
+        track: wavelink.Playable = payload.track
+
+        embed: discord.Embed = discord.Embed(title="Now Playing")
+        embed.description = f"**{track.title}** by `{track.author}`"
+
+        if track.artwork:
+            embed.set_image(url=track.artwork)
+
+        if original and original.recommended:
+            embed.description += f"\n\n`This track was recommended via {track.source}`"
+
+        if track.album.name:
+            embed.add_field(name="Album", value=track.album.name)
+
+        await player.home.send(embed=embed)
 
 selene = Selene(command_prefix="s!", intents=intents)
 

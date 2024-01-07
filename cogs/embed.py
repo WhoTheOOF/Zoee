@@ -13,7 +13,7 @@ class EmbedModal(discord.ui.Modal, title="Clicca qui!"):
     )
     
     EMBED_DESC = discord.ui.TextInput(
-        style=discord.TextStyle.short,
+        style=discord.TextStyle.paragraph,
         label="NUOVA DESCRIZIONE EMBED",
         required=False,
         placeholder="Non inserire nulla per non modificarla.",
