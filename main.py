@@ -19,35 +19,7 @@ class Selene(commands.Bot):
                 await self.load_extension(f"cogs.{cog_file[:-3]}")
                 print(f"Caricato {cog_file}.")
                 
-        nodes = [wavelink.Node(uri="http://localhost:2333", password="youshallnotpass")]
-        await wavelink.Pool.connect(nodes=nodes, client=self, cache_capacity=None)
-
-    async def on_wavelink_node_ready(self, payload: wavelink.NodeReadyEventPayload) -> None:
-        logging.info(f"Wavelink Node connected: {payload.node!r} | Resumed: {payload.resumed}")
-
-    async def on_wavelink_track_start(self, payload: wavelink.TrackStartEventPayload) -> None:
-        player: wavelink.Player | None = payload.player
-        if not player:
-            # Handle edge cases...
-            return
-
-        original: wavelink.Playable | None = payload.original
-        track: wavelink.Playable = payload.track
-
-        embed: discord.Embed = discord.Embed(title="Now Playing")
-        embed.description = f"**{track.title}** by `{track.author}`"
-
-        if track.artwork:
-            embed.set_image(url=track.artwork)
-
-        if original and original.recommended:
-            embed.description += f"\n\n`This track was recommended via {track.source}`"
-
-        if track.album.name:
-            embed.add_field(name="Album", value=track.album.name)
-
-        await player.home.send(embed=embed)
-
+discord.utils.setup_logging(level=logging.INFO)
 selene = Selene(command_prefix="s!", intents=intents)
 
 @selene.event

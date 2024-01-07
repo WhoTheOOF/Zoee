@@ -19,13 +19,13 @@ class Welcome(commands.Cog):
                                         "- <a:slurp_icon:1190789464797216899> [Ruolo Verificato](https://discord.com/channels/1192455862464299058/1192457347352772699)\n"
                                         "- <:vslticket:1190657441956896830> [Tickets](https://discord.com/channels/1192455862464299058/1192457412121215097)\n\n"
                                         "🎊 Siamo sempre attivi! Dai un'occhio al canale [**🎉 Giveaways**](https://discord.com/channels/1192455862464299058/1192457351593214095) per vincere premi fantastici!", color=0xffc0cb)
-            embed_w.set_author(name=f"⇾ Ciao {member.name} ⇽", icon_url=member.avatar.url)
+            embed_w.set_author(name=f"⇾ Ciao {member.name} ⇽", icon_url=member.avatar.url if member.avatar.url != None else member.guild.icon.url)
             embed_w.set_image(url="https://cdn.discordapp.com/attachments/1192457322337947748/1192488696398749746/server_banner.gif?ex=65a942a4&is=6596cda4&hm=2a01caf8596219071e01cbd25356494f93e11958594c58b82644d471ef3be6c3&")
             embed_w.set_footer(text=f"Oggi alle {time.strftime('%H:%M')}", icon_url=member.guild.icon.url)
             
             embed_g = discord.Embed(description=f"👋 Benvenuto in **{member.guild.name}**, manda il tuo primo messaggio qui!", color=0xffc0cb)
-            embed_g.set_author(name=f"⇾ {member.name} ~! ⇽", icon_url=member.avatar.url)
-            embed_g.set_thumbnail(url=member.avatar.url)
+            embed_g.set_author(name=f"⇾ {member.name} ~! ⇽", icon_url=member.avatar.url if member.avatar.url != None else member.guild.icon.url)
+            embed_g.set_thumbnail(url=member.avatar.url if member.avatar.url != None else member.guild.icon.url)
             embed_g.set_footer(text=f"Oggi alle {time.strftime('%H:%M')}", icon_url=member.guild.icon.url)
             
             channel_welcome = self.bot.get_channel(1192457329250156654)
