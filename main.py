@@ -19,10 +19,8 @@ class Selene(commands.Bot):
                 await self.load_extension(f"cogs.{cog_file[:-3]}")
                 print(f"Caricato {cog_file}.")
                 
-        nodes = [wavelink.Node(uri="localhost:2333", password="youshallnotpass")]
-
-        # cache_capacity is EXPERIMENTAL. Turn it off by passing None
-        await wavelink.Pool.connect(nodes=nodes, client=self, cache_capacity=100)
+        nodes = [wavelink.Node(uri="http://localhost:2333", password="youshallnotpass")]
+        await wavelink.Pool.connect(nodes=nodes, client=self, cache_capacity=None)
 
     async def on_wavelink_node_ready(self, payload: wavelink.NodeReadyEventPayload) -> None:
         logging.info(f"Wavelink Node connected: {payload.node!r} | Resumed: {payload.resumed}")
