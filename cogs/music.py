@@ -8,7 +8,6 @@ import datetime
 import typing
 from pagination import Pagination
 import settings
-from datetime import datetime,timezone
 
 class Music(commands.Cog):
 
@@ -34,7 +33,7 @@ class Music(commands.Cog):
         b = int((seconds % 3600)//60)
         c = int((seconds % 3600) % 60)
         dt = datetime.time(0, b, c)
-        tm = datetime.now(timezone.utc)
+        tm = datetime.datetime.now(datetime.timezone.utc)
 
         embed: discord.Embed = discord.Embed(description=f"<a:hellokittyexcited:1193494992967180381> Riproducendo **[{track.title}]({track.uri}) (`{dt.strftime('%M:%S')}`)** ({track.extras.requester if track.extras.requester else 'Anonimo'})", color=0xffc0cb)
         embed.set_footer(text=f"Oggi alle {tm.strftime('%H:%M')}", icon_url=player.guild.icon.url)
