@@ -1,15 +1,19 @@
 import discord
 from discord.ext import commands
-import time
 import settings
 import os
 from typing import Literal, Optional
-import wavelink
 import logging
 from typing import cast
+from discord.ext import tasks
+import asyncio
 
 intents = discord.Intents.all()
 intents.message_content = True
+
+os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
+os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
+os.environ["JISHAKU_FORCE_PAGINATOR"] = "True"
 
 class Selene(commands.Bot):
     async def setup_hook(self):
@@ -22,9 +26,21 @@ class Selene(commands.Bot):
 discord.utils.setup_logging(level=logging.INFO)
 selene = Selene(command_prefix="s!", intents=intents)
 
+@tasks.loop(seconds=10)
+async def statusloop():
+    await selene.wait_until_ready()
+    await selene.change_presence(status=discord.Status.idle, activity=discord.Activity(type=discord.ActivityType.watching, name=f"💃 SLURP"))
+    await asyncio.sleep(30)
+    await selene.change_presence(status=discord.Status.idle, activity=discord.Activity(type=discord.ActivityType.playing, name=f"osu!", assets={
+        "large_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Osu%21_Logo_2016.svg/2048px-Osu%21_Logo_2016.svg.png",
+        "large_text": "Giocando osu con amici!"
+        }))
+    await asyncio.sleep(30)
+
 @selene.event
 async def on_ready():
     print(f'Loggato come {selene.user}!')
+    await statusloop.start()
     
 @selene.command()
 @commands.guild_only()

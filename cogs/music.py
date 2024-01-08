@@ -13,7 +13,7 @@ import settings
 class Music(commands.Cog):
 
     async def setup(self):
-        nodes = [wavelink.Node(uri="http://lavalink.jirayu.pw:2333", password="youshallnotpass")]
+        nodes = [wavelink.Node(uri="http://lavalink.silverblare.com:2333", password="youshallnotpass")]
         await wavelink.Pool.connect(nodes=nodes, client=self.bot, cache_capacity=None)
 
     @commands.Cog.listener()
@@ -36,7 +36,7 @@ class Music(commands.Cog):
         dt = datetime.time(0, b, c)
 
         embed: discord.Embed = discord.Embed(description=f"<a:hellokittyexcited:1193494992967180381> Riproducendo **[{track.title}]({track.uri}) (`{dt.strftime('%M:%S')}`)** ({track.extras.requester if track.extras.requester else 'Anonimo'})", color=0xffc0cb)
-        embed.set_footer(text=f"Oggi alle {time.strftime('%H:%M')}", icon_url=player.guild.icon.url)
+        embed.set_footer(text=f"Oggi alle {dt.strftime('%H:%M')}", icon_url=player.guild.icon.url)
 
         if track.artwork:
             embed.set_author(name=f"⇾ {track.author} ⇽", icon_url=f"{track.artwork}")
@@ -48,12 +48,22 @@ class Music(commands.Cog):
 
         await player.home.send(embed=embed)
 
+    @commands.Cog.listener()
+    async def on_wavelink_track_end(self, payload: wavelink.TrackEndEventPayload) -> None:
+        player: wavelink.Player | None = payload.player
+        player.inactive_timeout = 180
+    
+    @commands.Cog.listener()
+    async def on_wavelink_inactive_player(self, player: wavelink.Player) -> None:
+        await player.channel.send(f"<a:hellokittyangry:1193495024437047346> Non e' stato riprodotto nulla per `3 minuti`, ci vediamo! ")
+        await player.disconnect()
+
     def __init__(self, bot):
         self.bot= bot
 
     class MusicGroup(app_commands.Group):
         
-        @app_commands.command(description="Riproduci le tue canzoni preferite da vari siti (Spotify, Soundcloud, Youtube..)")
+        @app_commands.command(description="Riproduci le tue canzoni preferite da vari siti (Spotify, Soundcloud, Youtube..), o usa i generi suggeriti se non hai voglia di cercare!")
         async def play(self, interaction: discord.Interaction, titolo_o_link: str) -> None:
             """Play a song with the given query."""
             if not interaction.guild:
@@ -62,9 +72,22 @@ class Music(commands.Cog):
             player: wavelink.Player
             player = cast(wavelink.Player, interaction.guild.voice_client)  # type: ignore
 
+            premade_queries = {
+                "lofi": "https://open.spotify.com/playlist/37i9dQZF1DWYoYGBbGKurt?si=aa20720238d343a1",
+                "tekno": "https://open.spotify.com/playlist/4LVUmDINyVZUyZwG46SfWV?si=ef888ec515754d58",
+                "house": "https://open.spotify.com/intl-it/album/3WFl3RHKh1Ea9nJ25NbnJI?si=d1af77f886e64321",
+                "dubstep": "https://open.spotify.com/playlist/4YZNKPS9bM3xv1UF4WZil0?si=59d17e493ef943c8",
+                "rap (americano)": "https://open.spotify.com/playlist/58O4zjTwATYSep8TYSZTr0?si=305700416e004d5f",
+                "rap (italiano)": "https://open.spotify.com/playlist/44IU4j4hQ8fB5cCEmSig1E?si=015542996bc84ce9",
+                "psytrance": "https://open.spotify.com/playlist/0R29couUMdcX6JUDGFFapa?si=17760d56a45d4d85"
+            }
+            
+            if titolo_o_link.lower() in premade_queries:
+                titolo_o_link = premade_queries[titolo_o_link]
+
             if not player:
                 try:
-                    player = await interaction.user.voice.channel.connect(cls=wavelink.Player)  # type: ignore
+                    player = await interaction.user.voice.channel.connect(cls=wavelink.Player, self_mute=False, self_deaf=True)  # type: ignore
                 except AttributeError:
                     await interaction.response.send_message("<a:hellokittyangry:1193495024437047346> Entra in un canale vocale prima di usare questo comando.", ephemeral=True)
                     return
@@ -72,30 +95,20 @@ class Music(commands.Cog):
                     await interaction.response.send_message("<a:hellokittyangry:1193495024437047346> Non ho i permessi per entrare nel canale vocale.", ephemeral=True)
                     return
 
-            # Turn on AutoPlay to enabled mode.
-            # enabled = AutoPlay will play songs for us and fetch recommendations...
-            # partial = AutoPlay will play songs for us, but WILL NOT fetch recommendations...
-            # disabled = AutoPlay will do nothing...
             player.autoplay = wavelink.AutoPlayMode.partial
 
-            # Lock the player to this channel...
             if not hasattr(player, "home"):
                 player.home = interaction.channel
             elif player.home != interaction.channel:
                 await interaction.response.send_message(f"<a:hellokittyangry:1193495024437047346> Puoi usare questo comando solo in {player.home.mention}, non posso essere in piu' vocali contemporaneamente.", ephemeral=True)
                 return
 
-            # This will handle fetching Tracks and Playlists...
-            # Seed the doc strings for more information on this method...
-            # If spotify is enabled via LavaSrc, this will automatically fetch Spotify tracks if you pass a URL...
-            # Defaults to YouTube for non URL based queries...
             tracks: wavelink.Search = await wavelink.Playable.search(titolo_o_link)
             if not tracks:
                 await interaction.response.send_message(f"<a:hellokittyangry:1193495024437047346> Non ho trovato nessun risultato per **`{titolo_o_link}`**, riprova.", ephemeral=True)
                 return
 
             if isinstance(tracks, wavelink.Playlist):
-                # tracks is a playlist...
                 for track in tracks:
                     track.extras = {"requester": interaction.user.mention}
                 added: int = await player.queue.put_wait(tracks)
@@ -107,8 +120,15 @@ class Music(commands.Cog):
                 await interaction.response.send_message(f"<a:hellokittywave:1193495028874608773> **`{track}`** è stata aggiunta alla coda delle canzoni.")
 
             if not player.playing:
-                # Play now since we aren't playing anything...
                 await player.play(player.queue.get(), volume=100)
+
+        @play.autocomplete("query")
+        async def query_auto(self, interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
+            data = []
+            for option in ["tekno", "lofi", "house", "dubstep", "rap (americano)", "rap (italiano)", "psytrance"]:
+                if current.lower() in option.lower():
+                    data.append(app_commands.Choice(name=option.upper(), value=option.upper()))
+            return data
 
         @app_commands.command(description="Passa alla prossima canzone in playlist :)")
         async def skip(self, interaction: discord.Interaction) -> None:
@@ -161,7 +181,7 @@ class Music(commands.Cog):
                     filters.rotation.set(rotation_hz=0.4)
                     
                 elif nome_filtro.lower() == "distortion":
-                    filters.distortion.set(sin_offset=0.2, sin_scale=0.9, cos_offset=0.4, cos_scale=0.7, tan_offset=1.8, tan_scale=1.3, offset=0.6, scale=2.7)
+                    filters.distortion.set(sin_offset=0.2, sin_scale=0.9, cos_offset=0.4, cos_scale=0.7, tan_offset=0.8, tan_scale=0.3, offset=0.6, scale=2.7)
                     
                 await player.set_filters(filters)
                 await interaction.response.send_message(f"<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha impostato il filtro **`{nome_filtro.upper()}`**.")
@@ -251,7 +271,7 @@ class Music(commands.Cog):
                     c = int((seconds % 3600) % 60)
                     dt = datetime.time(0, b, c)
                     index = index + 1
-                    emb.description += f"**`{index}`**) **{item.author}** ↪ Da: {item.extras.requester}\n- [{item.title}]({item.uri}) | `{dt.strftime('%M:%S')}`\n\n"
+                    emb.description += f"**`{index}`**) **{item.author}** ↪ {item.extras.requester}\n- [{item.title}]({item.uri}) | `{dt.strftime('%M:%S')}`\n\n"
                     
                 emb.set_author(name=f"{interaction.guild.name} Musica", icon_url=interaction.guild.icon.url)
                 n = Pagination.compute_total_pages(len(player.queue), settings.MAX_EMBED_LENGHT)
