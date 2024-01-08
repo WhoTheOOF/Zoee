@@ -122,7 +122,7 @@ class Music(commands.Cog):
             if not player.playing:
                 await player.play(player.queue.get(), volume=100)
 
-        @play.autocomplete("query")
+        @play.autocomplete("titolo_o_link")
         async def query_auto(self, interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
             data = []
             for option in ["tekno", "lofi", "house", "dubstep", "rap (americano)", "rap (italiano)", "psytrance"]:
