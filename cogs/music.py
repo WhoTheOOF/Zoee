@@ -51,7 +51,11 @@ class Music(commands.Cog):
     @commands.Cog.listener()
     async def on_wavelink_track_end(self, payload: wavelink.TrackEndEventPayload) -> None:
         player: wavelink.Player | None = payload.player
-        player.inactive_timeout = 180
+        if not player:
+            return
+        
+        if not player.queue:
+            player.inactive_timeout = 180
     
     @commands.Cog.listener()
     async def on_wavelink_inactive_player(self, player: wavelink.Player) -> None:
@@ -63,7 +67,7 @@ class Music(commands.Cog):
 
     class MusicGroup(app_commands.Group):
         
-        @app_commands.command(description="Riproduci le tue canzoni preferite da vari siti (Spotify, Soundcloud, Youtube..), o usa i generi suggeriti se non hai voglia di cercare!")
+        @app_commands.command(description="Riproduci le tue canzoni preferite da vari siti (Spotify, Soundcloud, Youtube..)")
         async def play(self, interaction: discord.Interaction, titolo_o_link: str) -> None:
             """Play a song with the given query."""
             if not interaction.guild:
@@ -75,7 +79,7 @@ class Music(commands.Cog):
             premade_queries = {
                 "lofi": "https://open.spotify.com/playlist/37i9dQZF1DWYoYGBbGKurt?si=aa20720238d343a1",
                 "tekno": "https://open.spotify.com/playlist/4LVUmDINyVZUyZwG46SfWV?si=ef888ec515754d58",
-                "house": "https://open.spotify.com/intl-it/album/3WFl3RHKh1Ea9nJ25NbnJI?si=d1af77f886e64321",
+                "house": "https://open.spotify.com/playlist/37i9dQZF1EQpoj8u9Hn81e?si=2e4104b08a1c415b",
                 "dubstep": "https://open.spotify.com/playlist/4YZNKPS9bM3xv1UF4WZil0?si=59d17e493ef943c8",
                 "rap (americano)": "https://open.spotify.com/playlist/58O4zjTwATYSep8TYSZTr0?si=305700416e004d5f",
                 "rap (italiano)": "https://open.spotify.com/playlist/44IU4j4hQ8fB5cCEmSig1E?si=015542996bc84ce9",
@@ -83,7 +87,7 @@ class Music(commands.Cog):
             }
             
             if titolo_o_link.lower() in premade_queries:
-                titolo_o_link = premade_queries[titolo_o_link]
+                titolo_o_link = premade_queries[titolo_o_link.lower()]
 
             if not player:
                 try:
@@ -123,7 +127,7 @@ class Music(commands.Cog):
                 await player.play(player.queue.get(), volume=100)
 
         @play.autocomplete("titolo_o_link")
-        async def query_auto(self, interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
+        async def play_auto(self, interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
             data = []
             for option in ["tekno", "lofi", "house", "dubstep", "rap (americano)", "rap (italiano)", "psytrance"]:
                 if current.lower() in option.lower():

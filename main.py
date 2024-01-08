@@ -24,25 +24,25 @@ class Selene(commands.Bot):
                 print(f"Caricato {cog_file}.")
                 
 discord.utils.setup_logging(level=logging.INFO)
-selene = Selene(command_prefix="s!", intents=intents)
+bot = Selene(command_prefix=["zoe ", "z!", "<@1191841650444607588> "], intents=intents)
 
 @tasks.loop(seconds=10)
 async def statusloop():
-    await selene.wait_until_ready()
-    await selene.change_presence(status=discord.Status.idle, activity=discord.Activity(type=discord.ActivityType.watching, name=f"💃 SLURP"))
+    await bot.wait_until_ready()
+    await bot.change_presence(status=discord.Status.idle, activity=discord.Activity(type=discord.ActivityType.watching, name=f"💃 SLURP"))
     await asyncio.sleep(30)
-    await selene.change_presence(status=discord.Status.idle, activity=discord.Activity(type=discord.ActivityType.playing, name=f"osu!", assets={
+    await bot.change_presence(status=discord.Status.idle, activity=discord.Activity(type=discord.ActivityType.playing, name=f"osu!", assets={
         "large_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Osu%21_Logo_2016.svg/2048px-Osu%21_Logo_2016.svg.png",
         "large_text": "Giocando osu con amici!"
         }))
     await asyncio.sleep(30)
 
-@selene.event
+@bot.event
 async def on_ready():
-    print(f'Loggato come {selene.user}!')
+    print(f'Loggato come {bot.user}!')
     await statusloop.start()
     
-@selene.command()
+@bot.command()
 @commands.guild_only()
 @commands.is_owner()
 async def sync(ctx: commands.Context, guilds: commands.Greedy[discord.Object], spec: Optional[Literal["~", "*", "^"]] = None) -> None:
@@ -76,4 +76,4 @@ async def sync(ctx: commands.Context, guilds: commands.Greedy[discord.Object], s
     await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
 
 if __name__ == "__main__":
-    selene.run(settings.DISCORD_API_SECRET)
+    bot.run(settings.DISCORD_API_SECRET)
