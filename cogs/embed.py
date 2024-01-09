@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 import time
 from discord import NotFound
-from utils.functions import EmbedModal, viewButtons, is_staff, StaffModal
+from utils.functions import EmbedModal, viewButtons, is_staff, StaffModal, BottoneNone
 
 class Embed(commands.Cog):
 
@@ -114,8 +114,19 @@ class Embed(commands.Cog):
     @app_commands.command(description="Modifica un'embed gia' inviato nel server!")
     @app_commands.check(is_staff)
     async def staff_app(self, interaction: discord.Interaction):
-        staff_modal = StaffModal()
-        await interaction.response.send_modal(staff_modal)
+        
+        embed = discord.Embed(
+            description = "# 🔹 CANDIDATURE STAFF 🔹 # \n\n🎉 Sono aperte le candidature Staff nel server per le seguenti posizioni:\n\n- <:vslticket:1192554270831169536> <@&1194372244001009755>\n- <:management:1192556335477297305> <@&1194372373244289044>\n\n"
+                        f"Per candidarti clicca il bottone sotto, buona fortuna!",
+            color = 0xffc0cb
+        )
+        
+        channel = interaction.client.get_channel(1194380666557702195)
+        
+        view = BottoneNone()
+        await channel.send(embed=embed, view=view)
+        
+        await view.wait()
             
 async def setup(bot: commands.Bot):
     bot.tree.add_command(Embed.EmbedGroup(name="embed"))

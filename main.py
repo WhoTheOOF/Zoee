@@ -6,9 +6,10 @@ import logging
 from typing import cast
 from discord.ext import tasks
 import asyncio
+from utils.functions import StaffAppButtons, BottoneNone
 
 log = logging.getLogger("discord")
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 class Zoee(commands.Bot):
     
@@ -30,6 +31,9 @@ class Zoee(commands.Bot):
             if file.endswith('.py'):
                 await self.load_extension(f"utils.{file[:-3]}")
                 log.info(f"Caricato {file}.")
+                
+        self.add_view(StaffAppButtons())
+        self.add_view(BottoneNone())
 
 bot = Zoee(command_prefix=["zoe ", "z!", "<@1191841650444607588> "], intents=Zoee.intents)
 
