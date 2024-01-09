@@ -10,12 +10,12 @@ log = logging.getLogger(__name__)
 class Utility(commands.Cog):
     
     def __init__(self, bot):
-        self.bot= bot
+        self.bot = bot
     
     @commands.command()
     async def reload(self, ctx, module: str):
         try:
-            importlib.reload(sys.modules[f"{module}.py"])
+            await self.bot.reload_extension(f"utils.{module}.py")
             return await ctx.send(f"<a:cinnamonwave:1193494989280378890> Reloaded `{module}.py`")
         except Exception as exc:
             log.exception(exc)

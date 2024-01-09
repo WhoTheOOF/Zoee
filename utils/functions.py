@@ -7,8 +7,7 @@ import typing
 import logging
 import os
 
-log = logging.getLogger(__name__)
-discord.utils.setup_logging(level=logging.INFO)
+log = logging.getLogger("discord")
 
 class StaffModal(discord.ui.Modal, title="Modulo Staff"):
     DISCORD_USERNAME = discord.ui.TextInput(

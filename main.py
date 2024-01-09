@@ -7,7 +7,8 @@ from typing import cast
 from discord.ext import tasks
 import asyncio
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("discord")
+log.setLevel(logging.DEBUG)
 
 class Zoee(commands.Bot):
     
