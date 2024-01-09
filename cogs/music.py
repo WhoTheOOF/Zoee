@@ -10,6 +10,8 @@ from pagination import Pagination
 import settings
 from utils.functions import SendMessage
 
+log = logging.getLogger(__name__)
+
 class Music(commands.Cog):
 
     async def setup(self):
@@ -18,7 +20,7 @@ class Music(commands.Cog):
 
     @commands.Cog.listener()
     async def on_wavelink_node_ready(self, payload: wavelink.NodeReadyEventPayload) -> None:
-        logging.info(f"Wavelink Node connected: {payload.node!r} | Resumed: {payload.resumed}")
+        log.info(f"Wavelink Node connected: {payload.node!r} | Resumed: {payload.resumed}")
 
     @commands.Cog.listener()
     async def on_wavelink_track_start(self, payload: wavelink.TrackStartEventPayload) -> None:

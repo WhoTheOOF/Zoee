@@ -7,11 +7,35 @@ import logging
 from typing import cast
 from discord.ext import tasks
 import asyncio
-from utils.functions import Zoee
-from utils.functions import bot as Bot
-from utils.functions import StartUp
 
-bot = Bot
+log = logging.getLogger(__name__)
+
+class Zoee(commands.Bot):
+    
+    intents = discord.Intents.all()
+    intents.message_content = True
+
+    os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
+    os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
+    os.environ["JISHAKU_FORCE_PAGINATOR"] = "True"
+    
+    async def setup_hook(self):
+        await self.load_extension("jishaku")
+        for cog_file in os.listdir("./cogs"):
+            if cog_file.endswith(".py"):
+                await self.load_extension(f"cogs.{cog_file[:-3]}")
+                log.info(f"Caricato {cog_file}.")
+        
+        for file in os.listdir("./utils"):
+            if file.endswith('.py'):
+                await self.load_extension(f"utils.{file[:-3]}")
+                log.info(f"Caricato {file}.")
+
+bot = Zoee(command_prefix=["zoe ", "z!", "<@1191841650444607588> "], intents=Zoee.intents)
+
+class StartUp():
+    def startup_bot(token):
+        bot.run(token)
 
 @tasks.loop(seconds=10)
 async def statusloop():
@@ -26,40 +50,7 @@ async def statusloop():
 
 @bot.event
 async def on_ready():
-    print(f'Loggato come {bot.user}!')
+    log.info(f'Loggato come {bot.user}!')
     await statusloop.start()
-    
-@bot.command()
-@commands.guild_only()
-@commands.is_owner()
-async def sync(ctx: commands.Context, guilds: commands.Greedy[discord.Object], spec: Optional[Literal["~", "*", "^"]] = None) -> None:
-    if not guilds:
-        if spec == "~":
-            synced = await ctx.bot.tree.sync(guild=ctx.guild)
-        elif spec == "*":
-            ctx.bot.tree.copy_global_to(guild=ctx.guild)
-            synced = await ctx.bot.tree.sync(guild=ctx.guild)
-        elif spec == "^":
-            ctx.bot.tree.clear_commands(guild=ctx.guild)
-            await ctx.bot.tree.sync(guild=ctx.guild)
-            synced = []
-        else:
-            synced = await ctx.bot.tree.sync()
-
-        await ctx.send(
-            f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
-        )
-        return
-
-    ret = 0
-    for guild in guilds:
-        try:
-            await ctx.bot.tree.sync(guild=guild)
-        except discord.HTTPException:
-            pass
-        else:
-            ret += 1
-
-    await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
 
 StartUp.startup_bot(token=settings.DISCORD_API_SECRET)
