@@ -9,6 +9,32 @@ import os
 
 logging.getLogger(__name__)
 
+class StaffModal(discord.ui.Modal, title="Modulo Staff"):
+    DISCORD_USERNAME = discord.ui.TextInput(
+        style=discord.TextStyle.short,
+        label="Discord @",
+        required=True,
+        placeholder="Esempio: @seizou",
+    )
+    
+    EMAIL = discord.ui.TextInput(
+        style=discord.TextStyle.short,
+        label="Indirizzo Email",
+        required=True,
+        placeholder="Inserisci il tuo indirizzo email",
+    )
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        
+        RUOLI = discord.ui.Select(
+            options=[discord.SelectOption(label="ruolo 1", value="test1"), discord.SelectOption(label="ruolo 2", value="test2"), discord.SelectOption(label="ruolo 3", value="test3")]
+        )
+        
+        view = discord.ui.View()
+        view.add_item(RUOLI)
+        
+        return await interaction.response.send_message(f"{StaffModal.DISCORD_USERNAME}, {StaffModal.EMAIL}, {StaffModal.RUOLO}", view=view, ephemeral=True)
+
 class EmbedModal(discord.ui.Modal, title="Clicca qui!"): 
     EMBED_TITLE = discord.ui.TextInput(
         style=discord.TextStyle.short,

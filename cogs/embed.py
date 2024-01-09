@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 import time
 from discord import NotFound
-from utils.functions import EmbedModal, viewButtons, is_staff
+from utils.functions import EmbedModal, viewButtons, is_staff, StaffModal
 
 class Embed(commands.Cog):
 
@@ -111,6 +111,12 @@ class Embed(commands.Cog):
             e_modal.ch = id_canale
             await interaction.response.send_modal(e_modal)   
         
+    @app_commands.command(description="Modifica un'embed gia' inviato nel server!")
+    @app_commands.check(is_staff)
+    async def staff_app(self, interaction: discord.Interaction):
+        staff_modal = StaffModal()
+        await interaction.response.send_modal(staff_modal)
+            
 async def setup(bot: commands.Bot):
     bot.tree.add_command(Embed.EmbedGroup(name="embed"))
     await bot.add_cog(Embed(bot))
