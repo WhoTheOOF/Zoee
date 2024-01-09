@@ -8,11 +8,12 @@ import datetime
 import typing
 from pagination import Pagination
 import settings
+from utils.functions import SendMessage
 
 class Music(commands.Cog):
 
     async def setup(self):
-        nodes = [wavelink.Node(uri="http://lavalink.silverblare.com:2333", password="youshallnotpass")]
+        nodes = [wavelink.Node(uri="http://lavalink.silverblare.com:2333", password="youshallnotpass", inactive_player_timeout=300)]
         await wavelink.Pool.connect(nodes=nodes, client=self.bot, cache_capacity=None)
 
     @commands.Cog.listener()
@@ -47,19 +48,10 @@ class Music(commands.Cog):
             embed.description += f"\n\n`Questa canzone e' stata raccomandata da **`{track.source}`**"
 
         await player.home.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_wavelink_track_end(self, payload: wavelink.TrackEndEventPayload) -> None:
-        player: wavelink.Player | None = payload.player
-        if not player:
-            return
-        
-        if not player.queue:
-            player.inactive_timeout = 180
     
     @commands.Cog.listener()
     async def on_wavelink_inactive_player(self, player: wavelink.Player) -> None:
-        await player.channel.send(f"<a:hellokittyangry:1193495024437047346> Non e' stato riprodotto nulla per `3 minuti`, ci vediamo! ")
+        await player.channel.send(f"<a:hellokittyangry:1193495024437047346> Non e' stato riprodotto nulla per `5 minuti`, ci vediamo! ")
         await player.disconnect()
 
     def __init__(self, bot):
@@ -93,10 +85,10 @@ class Music(commands.Cog):
                 try:
                     player = await interaction.user.voice.channel.connect(cls=wavelink.Player, self_mute=False, self_deaf=True)  # type: ignore
                 except AttributeError:
-                    await interaction.response.send_message("<a:hellokittyangry:1193495024437047346> Entra in un canale vocale prima di usare questo comando.", ephemeral=True)
+                    await SendMessage.as_interaction(interaction=interaction, content="<a:hellokittyangry:1193495024437047346> Entra in un canale vocale prima di usare questo comando.")
                     return
                 except discord.ClientException:
-                    await interaction.response.send_message("<a:hellokittyangry:1193495024437047346> Non ho i permessi per entrare nel canale vocale.", ephemeral=True)
+                    await SendMessage.as_interaction(interaction=interaction, content="<a:hellokittyangry:1193495024437047346> Non ho i permessi per entrare nel canale vocale.")
                     return
 
             player.autoplay = wavelink.AutoPlayMode.partial
@@ -104,24 +96,24 @@ class Music(commands.Cog):
             if not hasattr(player, "home"):
                 player.home = interaction.channel
             elif player.home != interaction.channel:
-                await interaction.response.send_message(f"<a:hellokittyangry:1193495024437047346> Puoi usare questo comando solo in {player.home.mention}, non posso essere in piu' vocali contemporaneamente.", ephemeral=True)
+                await SendMessage.as_interaction(interaction=interaction, content=f"<a:hellokittyangry:1193495024437047346> Puoi usare questo comando solo in {player.home.mention}, non posso essere in piu' vocali contemporaneamente.")
                 return
 
             tracks: wavelink.Search = await wavelink.Playable.search(titolo_o_link)
             if not tracks:
-                await interaction.response.send_message(f"<a:hellokittyangry:1193495024437047346> Non ho trovato nessun risultato per **`{titolo_o_link}`**, riprova.", ephemeral=True)
+                await SendMessage.as_interaction(interaction=interaction, content=f"<a:hellokittyangry:1193495024437047346> Non ho trovato nessun risultato per **`{titolo_o_link}`**, riprova.")
                 return
 
             if isinstance(tracks, wavelink.Playlist):
                 for track in tracks:
                     track.extras = {"requester": interaction.user.mention}
                 added: int = await player.queue.put_wait(tracks)
-                await interaction.response.send_message(f"<a:hellokittywave:1193495028874608773> Aggiunta la playlist **[{tracks.name}]({tracks.url})** ({added} traccie) alla coda.")
+                await SendMessage.as_interaction(interaction=interaction, content=f"<a:hellokittywave:1193495028874608773> Aggiunta la playlist **[{tracks.name}]({tracks.url})** ({added} traccie) alla coda.", eph=False)
             else:
                 track: wavelink.Playable = tracks[0]
                 track.extras = {"requester": interaction.user.mention}
                 await player.queue.put_wait(track)
-                await interaction.response.send_message(f"<a:hellokittywave:1193495028874608773> **`{track}`** è stata aggiunta alla coda delle canzoni.")
+                await SendMessage.as_interaction(interaction=interaction, content=f"<a:hellokittywave:1193495028874608773> **`{track}`** è stata aggiunta alla coda delle canzoni.", eph=False)
 
             if not player.playing:
                 await player.play(player.queue.get(), volume=100)

@@ -7,24 +7,11 @@ import logging
 from typing import cast
 from discord.ext import tasks
 import asyncio
+from utils.functions import Zoee
+from utils.functions import bot as Bot
+from utils.functions import StartUp
 
-intents = discord.Intents.all()
-intents.message_content = True
-
-os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
-os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
-os.environ["JISHAKU_FORCE_PAGINATOR"] = "True"
-
-class Selene(commands.Bot):
-    async def setup_hook(self):
-        await self.load_extension("jishaku")
-        for cog_file in os.listdir("./cogs"):
-            if cog_file.endswith(".py"):
-                await self.load_extension(f"cogs.{cog_file[:-3]}")
-                print(f"Caricato {cog_file}.")
-                
-discord.utils.setup_logging(level=logging.INFO)
-bot = Selene(command_prefix=["zoe ", "z!", "<@1191841650444607588> "], intents=intents)
+bot = Bot
 
 @tasks.loop(seconds=10)
 async def statusloop():
@@ -75,5 +62,4 @@ async def sync(ctx: commands.Context, guilds: commands.Greedy[discord.Object], s
 
     await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
 
-if __name__ == "__main__":
-    bot.run(settings.DISCORD_API_SECRET)
+StartUp.startup_bot(token=settings.DISCORD_API_SECRET)
