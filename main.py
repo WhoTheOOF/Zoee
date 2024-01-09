@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 import settings
 import os
-from typing import Literal, Optional
 import logging
 from typing import cast
 from discord.ext import tasks
@@ -33,9 +32,6 @@ class Zoee(commands.Bot):
 
 bot = Zoee(command_prefix=["zoe ", "z!", "<@1191841650444607588> "], intents=Zoee.intents)
 
-class StartUp():
-    def startup_bot(token):
-        bot.run(token)
 
 @tasks.loop(seconds=10)
 async def statusloop():
@@ -53,4 +49,5 @@ async def on_ready():
     log.info(f'Loggato come {bot.user}!')
     await statusloop.start()
 
-StartUp.startup_bot(token=settings.DISCORD_API_SECRET)
+if __name__ == "__main__":
+    bot.run(settings.DISCORD_API_SECRET)

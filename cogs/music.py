@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 class Music(commands.Cog):
 
     async def setup(self):
-        nodes = [wavelink.Node(uri="http://lavalink.silverblare.com:2333", password="youshallnotpass", inactive_player_timeout=300)]
+        nodes = [wavelink.Node(uri=settings.LAVALINK_INFO['server'], password=settings.LAVALINK_INFO['password'], inactive_player_timeout=300)]
         await wavelink.Pool.connect(nodes=nodes, client=self.bot, cache_capacity=None)
 
     @commands.Cog.listener()

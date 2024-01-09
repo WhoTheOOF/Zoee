@@ -11,3 +11,8 @@ BASE_DIR = pathlib.Path(__file__).parent
 COG_DIR = BASE_DIR / "cogs"
 
 MAX_EMBED_LENGHT = 10
+
+LAVALINK_INFO = {
+    "server": "http://lavalink.silverblare.com:2333",
+    "password": "youshallnotpass"
+}
