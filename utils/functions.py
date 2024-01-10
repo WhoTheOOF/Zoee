@@ -209,15 +209,6 @@ def is_staff(interaction: discord.Interaction):
     if str(interaction.user.id) in allowed_members_ids:
         return True
     return False
-
-class SendMessage():
-
-    async def as_interaction(interaction: discord.Interaction, content: str, eph: True):
-        try:
-            await interaction.response.defer()
-            await interaction.followup.send(content=content, ephemeral=eph)
-        except Exception as exception:
-            return log.error(f"✕ Errore in as_interaction (functions.py): {exception}")
         
 async def setup(bot):
     log.info("Functions Setup!")

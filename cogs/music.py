@@ -8,9 +8,22 @@ import datetime
 import typing
 from pagination import Pagination
 import settings
-from utils.functions import SendMessage
+import asyncio
 
 log = logging.getLogger(__name__)
+
+class SendMessage():
+
+    async def as_interaction(interaction: discord.Interaction, content: str, eph: True):
+        try:
+            await interaction.response.defer()
+            await asyncio.sleep(4)
+            try:
+                await interaction.followup.send(content=content, ephemeral=eph)
+            except discord.NotFound:
+                await interaction.response.send_message(content=content, ephemeral=eph)
+        except Exception as exception:
+            return log.error(f"✕ Errore in as_interaction (functions.py): {exception}")
 
 class Music(commands.Cog):
 
