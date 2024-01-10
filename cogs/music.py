@@ -14,7 +14,7 @@ log = logging.getLogger("discord")
 
 class SendMessage():
 
-    async def as_followup_interaction(interaction: discord.Interaction, content: str, eph: True):
+    async def as_followup_interaction(interaction: discord.Interaction, content: str, eph = True):
         try:
             await interaction.followup.send(content=content, ephemeral=eph)
         except discord.NotFound as exception:

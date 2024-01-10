@@ -31,11 +31,13 @@ class Boost(commands.Cog):
             double_boost_embed.set_author(name=f"⇾ 💃 SLURP CREW Annuncio Double Boost ⇽", icon_url=message.guild.icon.url)
             double_boost_embed.set_footer(text=f"Oggi alle {tm.strftime('%H:%M')}", icon_url=message.guild.icon.url)
             
-            if "Server Booster" in message.author.roles:
+            m = message.guild.get_member(message.author.id)
+            r = message.guild.get_role(1192555588115247164)
+            if r in m.roles:
                 await message.author.add_roles(db)
                 return await channel.send(embed=double_boost_embed)
-            else:
-                return await channel.send(embed=server_boost_embed)
+            return await channel.send(embed=server_boost_embed)
+            
     
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
