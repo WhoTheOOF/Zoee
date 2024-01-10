@@ -71,7 +71,7 @@ class StaffModal(discord.ui.Modal, title="Modulo Staff"):
         s_tempo = self.TEMPO.value
         s_motivazione = self.MOTIVAZIONE.value
         s_username = self.DISCORD_USERNAME.value
-        s_id = self.DISCORD_ID.value
+        s_id = int(self.DISCORD_ID.value) if self.DISCORD_ID.value.isdigit() else None
         
         RUOLI = discord.ui.Select(
             options=[discord.SelectOption(label="Ticket Manager", emoji="<:vslticket:1192554270831169536>", value="Ticket Manager"), 
@@ -103,23 +103,28 @@ class StaffModal(discord.ui.Modal, title="Modulo Staff"):
             view = StaffAppButtons()
             mex = await channel.send(embed=embed, view=view)
             
-            memb = interaction.client.get_user(int(s_id)) if isinstance(s_id, int) else None
+            memb = None
+            
+            if s_id:
+                if isinstance(s_id, int):
+                    memb = interaction.client.get_user(int(s_id))
+                
             await view.wait()
             
             if view.checkmark == True:
                 await mex.delete()
                 try:
-                    await channel.send(f"<a:hellokittyexcited:1193494992967180381> {view.author.mention} ha approvato la candidatura di **{memb.mention if memb else s_username}** per la posizione {emoji_to_use} **{RUOLI.values[0]}**!")
-                    return await memb.send(f"# STAFF APPLICATION #\n\n<a:hellokittyexcited:1193494992967180381> Hey hey ~! Qui per informarti che la tua candidatura staff e' stata approvata in:\n\n- **{interaction.guild.name}**\n\n"
+                    await memb.send(f"# STAFF APPLICATION #\n\n<a:hellokittyexcited:1193494992967180381> Hey hey ~! Qui per informarti che la tua candidatura staff e' stata approvata in:\n\n- **{interaction.guild.name}**\n\n"
                                            f"🔺 Se sei ancora interessato alla posizione, apri un [Ticket](https://discord.com/channels/1192455862464299058/1192457412121215097) allegando uno screen di questo messaggio per procedere!")
+                    return await channel.send(f"<a:hellokittyexcited:1193494992967180381> {view.author.mention} ha approvato la candidatura di **{memb.mention if memb else s_username}** per la posizione {emoji_to_use} **{RUOLI.values[0]}**!")
                 except Exception:
                     return await channel.send(f"<a:hellokittyexcited:1193494992967180381> {view.author.mention} ha approvato la candidatura di **{memb.mention if memb else s_username}** per la posizione {emoji_to_use} **{RUOLI.values[0]}**!\n"
                                               f"🔺 {memb.mention if memb else s_username} non ha i DM aperti a tutti, per tanto non posso informarlo dell'esito della candidatura, dovrete avvisarlo voi.")
             else:
                 await mex.delete()
                 try:
-                    await channel.send(f"<a:8319hellokittyno:1193495006170861588> {view.author.mention} ha rifiutato la candidatura di **{memb.mention if memb else s_username}** per la posizione {emoji_to_use} **{RUOLI.values[0]}**!\n")
-                    return await memb.send(f"# STAFF APPLICATION #\n\n<a:8319hellokittyno:1193495006170861588> Hey hey ~! Qui per informarti che la tua candidatura staff e' stata rifiutata in:\n\n- **{interaction.guild.name}**\n\n")
+                    await memb.send(f"# STAFF APPLICATION #\n\n<a:8319hellokittyno:1193495006170861588> Hey hey ~! Qui per informarti che la tua candidatura staff e' stata rifiutata in:\n\n- **{interaction.guild.name}**\n\n")
+                    return await channel.send(f"<a:8319hellokittyno:1193495006170861588> {view.author.mention} ha rifiutato la candidatura di **{memb.mention if memb else s_username}** per la posizione {emoji_to_use} **{RUOLI.values[0]}**!\n")
                 except Exception:
                     return await channel.send(f"<a:8319hellokittyno:1193495006170861588> {view.author.mention} ha rifiutato la candidatura di **{memb.mention if memb else s_username}** per la posizione {emoji_to_use} **{RUOLI.values[0]}**!\n"
                                               f"🔺 {memb.mention if memb else s_username} non ha i DM aperti a tutti, per tanto non posso informarlo dell'esito della candidatura, dovrete avvisarlo voi.")
