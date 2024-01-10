@@ -10,26 +10,41 @@ from pagination import Pagination
 import settings
 import asyncio
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("discord")
 
 class SendMessage():
 
-    async def as_interaction(interaction: discord.Interaction, content: str, eph: True):
-        await interaction.response.defer()
+    async def as_followup_interaction(interaction: discord.Interaction, content: str, eph: True):
         try:
             await interaction.followup.send(content=content, ephemeral=eph)
         except discord.NotFound as exception:
-            return log.error(f"✕ Errore in as_interaction (functions.py): {exception}")
+            return log.exception(exception)
 
 class Music(commands.Cog):
 
-    async def setup(self):
-        nodes = [wavelink.Node(uri=settings.LAVALINK_INFO['server'], password=settings.LAVALINK_INFO['password'], inactive_player_timeout=300)]
-        await wavelink.Pool.connect(nodes=nodes, client=self.bot, cache_capacity=None)
+    def __init__(self, bot):
+        self.bot= bot
+
+    @commands.Cog.listener()
+    async def on_wavelink_websocket_closed(self, payload: wavelink.WebsocketClosedEventPayload):
+        player: wavelink.Player | None = payload.player
+        if player:
+            await player.disconnect()
+            log.debug(f"{payload.player.node.identifier} Websocket Chiuso ({payload.code.name})")
+        log.debug(f"{payload.code.value} Websocket Chiuso ({payload.code.name})")
+        
+    @commands.Cog.listener()
+    async def on_wavelink_node_closed(self, node: wavelink.Node, disconnected: list[wavelink.Player]):
+        for player in disconnected:
+            try:
+                await player.disconnect()
+                log.debug(f"Disconnesso {node} (Player: {player}) in: {player.guild.name} ({player.guild.id}) - Players: {len(node.players)}")
+            except Exception as exception:
+                log.exception(exception)
 
     @commands.Cog.listener()
     async def on_wavelink_node_ready(self, payload: wavelink.NodeReadyEventPayload) -> None:
-        log.info(f"Wavelink Node connected: {payload.node!r} | Resumed: {payload.resumed}")
+        log.debug(f"Wavelink Node connected: {payload.node!r} | Resumed: {payload.resumed}")
 
     @commands.Cog.listener()
     async def on_wavelink_track_start(self, payload: wavelink.TrackStartEventPayload) -> None:
@@ -65,14 +80,12 @@ class Music(commands.Cog):
         await player.channel.send(f"<a:hellokittyangry:1193495024437047346> Non e' stato riprodotto nulla per `5 minuti`, ci vediamo! ")
         await player.disconnect()
 
-    def __init__(self, bot):
-        self.bot= bot
-
     class MusicGroup(app_commands.Group):
         
         @app_commands.command(description="Riproduci le tue canzoni preferite da vari siti (Spotify, Soundcloud, Youtube..)")
         async def play(self, interaction: discord.Interaction, titolo_o_link: str) -> None:
             """Play a song with the given query."""
+            await interaction.response.defer()
             if not interaction.guild:
                 return
 
@@ -96,10 +109,10 @@ class Music(commands.Cog):
                 try:
                     player = await interaction.user.voice.channel.connect(cls=wavelink.Player, self_mute=False, self_deaf=True)  # type: ignore
                 except AttributeError:
-                    await SendMessage.as_interaction(interaction=interaction, content="<a:hellokittyangry:1193495024437047346> Entra in un canale vocale prima di usare questo comando.")
+                    await SendMessage.as_followup_interaction(interaction=interaction, content="<a:hellokittyangry:1193495024437047346> Entra in un canale vocale prima di usare questo comando.")
                     return
                 except discord.ClientException:
-                    await SendMessage.as_interaction(interaction=interaction, content="<a:hellokittyangry:1193495024437047346> Non ho i permessi per entrare nel canale vocale.")
+                    await SendMessage.as_followup_interaction(interaction=interaction, content="<a:hellokittyangry:1193495024437047346> Non ho i permessi per entrare nel canale vocale.")
                     return
 
             player.autoplay = wavelink.AutoPlayMode.partial
@@ -107,24 +120,24 @@ class Music(commands.Cog):
             if not hasattr(player, "home"):
                 player.home = interaction.channel
             elif player.home != interaction.channel:
-                await SendMessage.as_interaction(interaction=interaction, content=f"<a:hellokittyangry:1193495024437047346> Puoi usare questo comando solo in {player.home.mention}, non posso essere in piu' vocali contemporaneamente.")
+                await SendMessage.as_followup_interaction(interaction=interaction, content=f"<a:hellokittyangry:1193495024437047346> Puoi usare questo comando solo in {player.home.mention}, non posso essere in piu' vocali contemporaneamente.")
                 return
 
             tracks: wavelink.Search = await wavelink.Playable.search(titolo_o_link)
             if not tracks:
-                await SendMessage.as_interaction(interaction=interaction, content=f"<a:hellokittyangry:1193495024437047346> Non ho trovato nessun risultato per **`{titolo_o_link}`**, riprova.")
+                await SendMessage.as_followup_interaction(interaction=interaction, content=f"<a:hellokittyangry:1193495024437047346> Non ho trovato nessun risultato per **`{titolo_o_link}`**, riprova.")
                 return
 
             if isinstance(tracks, wavelink.Playlist):
                 for track in tracks:
                     track.extras = {"requester": interaction.user.mention}
                 added: int = await player.queue.put_wait(tracks)
-                await SendMessage.as_interaction(interaction=interaction, content=f"<a:hellokittywave:1193495028874608773> Aggiunta la playlist **[{tracks.name}]({tracks.url})** ({added} traccie) alla coda.", eph=False)
+                await SendMessage.as_followup_interaction(interaction=interaction, content=f"<a:hellokittywave:1193495028874608773> Aggiunta la playlist **[{tracks.name}]({tracks.url})** ({added} traccie) alla coda.", eph=False)
             else:
                 track: wavelink.Playable = tracks[0]
                 track.extras = {"requester": interaction.user.mention}
                 await player.queue.put_wait(track)
-                await SendMessage.as_interaction(interaction=interaction, content=f"<a:hellokittywave:1193495028874608773> **`{track}`** è stata aggiunta alla coda delle canzoni.", eph=False)
+                await SendMessage.as_followup_interaction(interaction=interaction, content=f"<a:hellokittywave:1193495028874608773> **`{track}`** è stata aggiunta alla coda delle canzoni.", eph=False)
 
             if not player.playing:
                 await player.play(player.queue.get(), volume=100)
@@ -300,4 +313,3 @@ async def setup(bot: commands.Bot):
     m_bot = Music(bot)
     bot.tree.add_command(Music.MusicGroup(name="music"))
     await bot.add_cog(Music(bot))
-    await m_bot.setup()

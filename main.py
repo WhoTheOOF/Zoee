@@ -7,9 +7,19 @@ from typing import cast
 from discord.ext import tasks
 import asyncio
 from utils.functions import StaffAppButtons, BottoneNone
+import wavelink
+import logging.handlers
 
 log = logging.getLogger("discord")
-log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
+logging.getLogger('discord.http').setLevel(logging.INFO)
+
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+handler.setFormatter(logging.Formatter('[%(levelname)s] -> %(name)s: %(message)s'))
+log.addHandler(handler)
+
+logging.getLogger('asyncio').setLevel(logging.CRITICAL)
 
 class Zoee(commands.Bot):
     
@@ -21,6 +31,11 @@ class Zoee(commands.Bot):
     os.environ["JISHAKU_FORCE_PAGINATOR"] = "True"
     
     async def setup_hook(self):
+        
+        nodes = [wavelink.Node(uri=settings.LAVALINK_INFO['server'], password=settings.LAVALINK_INFO['password'], inactive_player_timeout=300)]
+        s = await wavelink.Pool.connect(nodes=nodes, client=self, cache_capacity=None)
+        log.info(f"Connesso a Lavalink: {s}")        
+        
         await self.load_extension("jishaku")
         for cog_file in os.listdir("./cogs"):
             if cog_file.endswith(".py"):
@@ -36,7 +51,6 @@ class Zoee(commands.Bot):
         self.add_view(BottoneNone())
 
 bot = Zoee(command_prefix=["zoe ", "z!", "<@1191841650444607588> "], intents=Zoee.intents)
-
 
 @tasks.loop(seconds=10)
 async def statusloop():
@@ -55,4 +69,4 @@ async def on_ready():
     await statusloop.start()
 
 if __name__ == "__main__":
-    bot.run(settings.DISCORD_API_SECRET)
+    bot.run(settings.DISCORD_API_SECRET, log_handler=handler)
