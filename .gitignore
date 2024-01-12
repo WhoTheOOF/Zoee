@@ -162,3 +162,5 @@ cython_debug/
 
 *.db
 settings.py
+server.py
+templates/

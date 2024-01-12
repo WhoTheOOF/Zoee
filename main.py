@@ -1,37 +1,38 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks, ipc
 import settings
 import os
 import logging
 from typing import cast
-from discord.ext import tasks
+from discord.ext.ipc.server import Server
+from discord.ext.ipc.objects import ClientPayload
 import asyncio
 from utils.functions import StaffAppButtons, BottoneNone
 import wavelink
 import logging.handlers
+import typing
 
 log = logging.getLogger("discord")
-log.setLevel(logging.DEBUG)
-logging.getLogger('discord.http').setLevel(logging.INFO)
 
-handler = logging.StreamHandler()
-handler.setLevel(logging.INFO)
-handler.setFormatter(logging.Formatter('[%(levelname)s] -> %(name)s: %(message)s'))
-log.addHandler(handler)
-
-logging.getLogger('asyncio').setLevel(logging.CRITICAL)
+os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
+os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
+os.environ["JISHAKU_FORCE_PAGINATOR"] = "True"
 
 class Zoee(commands.Bot):
-    
-    intents = discord.Intents.all()
-    intents.message_content = True
+    def __init__(self) -> None:
+        intents = discord.Intents.all()
+        intents.message_content = True
 
-    os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
-    os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
-    os.environ["JISHAKU_FORCE_PAGINATOR"] = "True"
-    
+        super().__init__(
+            command_prefix=["zoe ", "z!", "<@1191841650444607588> "], 
+            intents=intents
+        )
+
+        self.ipc = ipc.Server(self, secret_key="Zoee")
+
     async def setup_hook(self):
-        
+        await self.ipc.start()
+        log.info("[IPC] IPC Server Started")
         nodes = [wavelink.Node(uri=settings.LAVALINK_INFO['server'], password=settings.LAVALINK_INFO['password'], inactive_player_timeout=300)]
         s = await wavelink.Pool.connect(nodes=nodes, client=self, cache_capacity=None)
         log.info(f"Connesso a Lavalink: {s}")        
@@ -46,11 +47,20 @@ class Zoee(commands.Bot):
             if file.endswith('.py'):
                 await self.load_extension(f"utils.{file[:-3]}")
                 log.info(f"Caricato {file}.")
-                
+            
         self.add_view(StaffAppButtons())
         self.add_view(BottoneNone())
 
-bot = Zoee(command_prefix=["zoe ", "z!", "<@1191841650444607588> "], intents=Zoee.intents)
+    async def async_cleanup(self):
+        await self.ipc.stop()
+        log.warning("[IPC] IPC Server Closed.")
+
+    async def close(self):
+        await self.async_cleanup()
+        
+        await super().close()
+
+bot = Zoee()
 
 @tasks.loop(seconds=10)
 async def statusloop():
@@ -68,5 +78,10 @@ async def on_ready():
     log.info(f'Loggato come {bot.user}!')
     await statusloop.start()
 
+@Server.route()
+async def get_user_data(self, data: ClientPayload) -> typing.Dict:
+    user = self.get_user(data.id)
+    return user._to_minimal_user_json()
+
 if __name__ == "__main__":
-    bot.run(settings.DISCORD_API_SECRET, log_handler=handler)
+    bot.run(settings.DISCORD_API_SECRET)

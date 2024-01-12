@@ -29,10 +29,11 @@ class Utility(commands.Cog):
         async def on_timeout(self):
             for child in self.children:
                 child.disabled = True
-                logger.info('on_timeout called right now')
+                
+            list_v = '\n'.join(f"{key['user_obj'].mention} {'✅' if key['final_vote'] == True else '❌'}" for key in self.voters)    
                 
             closed_embed = discord.Embed(
-                description=f"# 💡 Votazioni Terminate # \n- `Argomento`: {self.argument}\n## 🔺 VOTI TOTALI 🔺 ## \n\n- ✅ **`{self.upvotes}`** | ❌ **`{self.downvotes}`**",
+                description=f"# 💡 Votazioni Terminate # \n- `Argomento`: {self.argument}\n## 👓 VOTI REGISTRATI 👓 ##\n{list_v}\n### 🔺 VOTI TOTALI 🔺 ### \n\n- ✅ **`{self.upvotes}`** | ❌ **`{self.downvotes}`**",
                 color=0xffc0cb
             )
         
@@ -49,20 +50,17 @@ class Utility(commands.Cog):
             if interaction.user in self.voters:
                 return await interaction.followup.send(f"Hai gia' votato.", ephemeral=True)
                 
-            self.voters.append(interaction.user)
-            logger.info("upvote went right")
+            data = {'user_obj': interaction.user, "final_vote": True}
                 
-            logger.info("now waiting")
+            self.voters.append(data)
 
             self.upvotes += 1
                     
             self.embed.description += f"- {interaction.user.mention}: ✅\n"
 
             self.embed.set_footer(text=f"✅ {self.upvotes} - ❌ {self.downvotes}")
-            logger.info("edited embed desc")
 
             await self.msg.edit(embed=self.embed)
-            logger.info("edited sent messages")
             
             await interaction.followup.send(f"<a:hellokittyexcited:1193494992967180381> Il tuo voto e' stato registrato!", ephemeral=True)
                 
@@ -73,20 +71,17 @@ class Utility(commands.Cog):
             if interaction.user in self.voters:
                 return await interaction.followup.send(f"Hai gia' votato.", ephemeral=True)
                 
-            self.voters.append(interaction.user)
-            logger.info("downvote went right")
-
-            logger.info("now waiting")
+            data = {'user_obj': interaction.user, "final_vote": False}
+                
+            self.voters.append(data)
 
             self.downvotes += 1
             
             self.embed.description += f"- {interaction.user.mention}: ❌\n"
 
             self.embed.set_footer(text=f"✅ {self.upvotes} - ❌ {self.downvotes}")
-            logger.info("edited embed desc")
 
             await self.msg.edit(embed=self.embed)
-            logger.info("edited sent messages")
             
             await interaction.followup.send(f"<a:hellokittyexcited:1193494992967180381> Il tuo voto e' stato registrato!", ephemeral=True)
     
@@ -103,19 +98,18 @@ class Utility(commands.Cog):
             return await ctx.send(f"<a:cinnamonwave:1193494989280378890> Qualcosa e' andato storto: {exc}")
 
     @app_commands.command(description="Crea un sondaggio!")
-    async def votazione(self, interaction: discord.Interaction, *, argomento: str):       
-        view = self.pollButtons(argomento, timeout=30.0)
+    async def votazione(self, interaction: discord.Interaction, argomento: str, durata: int):       
+        view = self.pollButtons(argomento, timeout=float(durata))
         
         embed = discord.Embed(
-            title=f"Votazione per {argomento}",
-            description=f"# 🔺 LISTA VOTI 🔺 # \n\n",
+            description=f"# Votazione Per `{argomento}` # \n\n## 🔺 LISTA VOTI 🔺 ## \n\n",
             color=0xffc0cb
         )
         
         m = await interaction.channel.send(embed=embed, view=view)
         view.msg = m
 
-        await interaction.response.send_message(f"Votazione iniziata con successo per {view.argument}", ephemeral=True)
+        await interaction.response.send_message(f"✅ Il tuo sondaggio a voti per: **`{view.argument}`** e' iniziato!", ephemeral=True)
         await view.wait()
 
     @commands.command()
