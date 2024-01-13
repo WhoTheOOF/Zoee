@@ -22,7 +22,7 @@ class Utility(commands.Cog):
             self.upvotes = 0
                 
             self.embed = discord.Embed(
-                description=f"# 💡 Votazione In Corso # \n- `Argomento`: {self.argument}\n## 🔺 LISTA VOTI 🔺 ## \n\n",
+                description=f"# 💡 Votazione in Corso # \n- `Argomento`: {self.argument}\n## 🔺 LISTA VOTI 🔺 ## \n\n",
                 color=0xffc0cb
             )
         
