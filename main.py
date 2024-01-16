@@ -60,6 +60,36 @@ class Zoee(commands.Bot):
         
         await super().close()
 
+    @Server.route()
+    async def get_user_data(self, data: ClientPayload) -> typing.Dict:
+        user = self.get_user(data.id)
+        return user._to_minimal_user_json()
+
+    @Server.route()
+    async def online_users(self, data: ClientPayload):
+        online = 0
+        guild = self.get_guild(1192455862464299058)
+        for user in guild.members:
+            if user.status == discord.Status.online:
+                online += 1
+        return str(online)
+            
+
+    @Server.route()
+    async def total_users(self, data: ClientPayload):
+        guild = self.get_guild(1192455862464299058)
+        return str(len(guild.members))
+
+    @Server.route()
+    async def verified_users(self, data: ClientPayload):
+        verified = 0
+        guild = self.get_guild(1192455862464299058)
+        r = guild.get_role(1192457209142059098)
+        for user in guild.members:
+            if r in user.roles:
+                verified += 1
+        return str(verified)
+
 bot = Zoee()
 
 @tasks.loop(seconds=10)
@@ -77,11 +107,6 @@ async def statusloop():
 async def on_ready():
     log.info(f'Loggato come {bot.user}!')
     await statusloop.start()
-
-@Server.route()
-async def get_user_data(self, data: ClientPayload) -> typing.Dict:
-    user = self.get_user(data.id)
-    return user._to_minimal_user_json()
 
 if __name__ == "__main__":
     bot.run(settings.DISCORD_API_SECRET)

@@ -37,5 +37,32 @@ class Welcome(commands.Cog):
             await channel_general.send(f"🎀 {member.mention} si e' appena unito al server 🎀", embed=embed_g)
             await channel_welcome.send(f"🎀 {member.mention} 🎀", embed=embed_w)
             
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        
+        valid_contents =[
+            'welcome',
+            'benvenut',
+            'hello',
+            'hi'
+        ]
+        
+        if message.guild.id == 1192455862464299058 and message.channel.id == 1192457359239417916 and any(i.lower() in message.content.lower() for i in valid_contents):
+            
+            emojis = [
+                "<a:hellokittywave:1193495028874608773>",
+                "<a:cinnamonwave:1193494989280378890>",
+                "<a:melodywave:1193495033366712360>",
+                "<a:pompomwave:1193495031928074311>",
+                "<a:whitespinningheart:1193494562610614363>"
+            ]
+            
+            try:
+                for i in emojis:
+                    await message.add_reaction(i)
+            except discord.RateLimited:
+                pass
+
+        
 async def setup(bot):
     await bot.add_cog(Welcome(bot))

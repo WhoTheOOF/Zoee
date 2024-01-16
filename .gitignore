@@ -164,3 +164,10 @@ cython_debug/
 settings.py
 server.py
 templates/
+wsgi.py
+node_modules/
+package-lock.json
+package.json
+static/
+tailwind.config.js
+zoee.sock
