@@ -1,6 +1,7 @@
-{"en":
-    {"Music":
-        {"play": {
+{"languages": {
+    "en": {
+        "Music": {
+          "play": {
             "AttributeError": "<a:hellokittyangry:1193495024437047346> Join in a Voice Channel before using this command..",
             "discord.ClientException": "<a:hellokittyangry:1193495024437047346> I don't have enough permissions to join your voice channel.",
             "interaction.channel_error": "<a:hellokittyangry:1193495024437047346> You can use this command only in {player.home.mention}.",
@@ -9,39 +10,44 @@
             "added_song": "<a:hellokittywave:1193495028874608773> **`{track}`** has been added to the queue.",
             "track_start": "<a:hellokittyexcited:1193494992967180381> Now playing **[{track.title}]({track.uri})** (`{dt.strftime('%M:%S')}`) ({track.extras.requester})",
             "timeout": "<a:hellokittyangry:1193495024437047346> Nothing has been requested for `5 Minutes`, leaving now."
-            },
-        "skip": {
+          },
+          "skip": {
             "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} has skipped the current song."
-        },
-        "filtro":{
+          },
+          "filtro": {
             "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} has applied the filter **`{nome_filtro.upper()}`**."
-        },
-        "nofiltro": {
+          },
+          "nofiltro": {
             "message1": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} has removed the current song filter.",
             "message2": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} there's no filter to remove."
-        },
-        "toggle": {
+          },
+          "toggle": {
             "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} has stopped the player."
-        },
-        "volume": {
+          },
+          "volume": {
             "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} has changed the volume to **`{player.volume}/100`**."
-        },
-        "stop": {
+          },
+          "stop": {
             "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} disconnected the player."
-        },
-        "queue": {
+          },
+          "queue": {
             "no_queue": "<a:8319hellokittyno:1193495006170861588> there's no songs in the queue.",
             "queue_cleared": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} has cleared the queue.",
             "queue_embed_desc": "# <a:hellokittyshake:1193495018078482512> Song Queue <a:hellokittyshake:1193495018078482512> # \n",
             "music_word": "Music",
             "page_word": "Page"
+          }
+        },
+      "Utility": {
+        "language": {
+          "embed_desc": "Hey {interaction.user.mention}! We currently support all the following languages:\n{languages_list}\n\n<a:hellokittyshake:1193495018078482512> Please select the language you want me to use in this server from the menu below.",
+          "confirmation_message": "<a:hellokittyexcited:1193494992967180381> From now on, in this server i'll talk in: "
         }
-        }
-    },
-
-"it":
-    {"Music":
-        {"play": {
+      }
+      },
+      "it": {
+        "Music": {
+          "play": {
             "AttributeError": "<a:hellokittyangry:1193495024437047346> Entra in un canale vocale prima di usare questo comando.",
             "discord.ClientException": "<a:hellokittyangry:1193495024437047346> Non ho i permessi necessari per entrare nel tuo canale vocale.",
             "interaction.channel_error": "<a:hellokittyangry:1193495024437047346> Puoi usare questo comando solo in {player.home.mention}.",
@@ -50,33 +56,40 @@
             "added_song": "<a:hellokittywave:1193495028874608773> **`{track}`** e' stata aggiunta alla coda.",
             "track_start": "<a:hellokittyexcited:1193494992967180381> Riproducendo **[{track.title}]({track.uri})** (`{dt.strftime('%M:%S')}`) ({track.extras.requester})",
             "timeout": "<a:hellokittyangry:1193495024437047346> Nessuna richiesta negli ultimi `5 Minuti`, sto uscendo."
-            },
-        "skip": {
+          },
+          "skip": {
             "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha saltato la traccia attuale."
-        },
-        "filtro":{
+          },
+          "filtro": {
             "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha applicato il filtro **`{nome_filtro.upper()}`**."
-        },
-        "nofiltro": {
+          },
+          "nofiltro": {
             "message1": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha rimosso il filtro applicato.",
             "message2": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} non ci sono filtri da rimuovere."
-        },
-        "toggle": {
+          },
+          "toggle": {
             "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha stoppato la riproduzione."
-        },
-        "volume": {
+          },
+          "volume": {
             "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha impostato il volume a **`{player.volume}/100`**."
-        },
-        "stop": {
+          },
+          "stop": {
             "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha disconnesso il bot."
-        },
-        "queue": {
+          },
+          "queue": {
             "no_queue": "<a:8319hellokittyno:1193495006170861588> non ci sono canzoni in coda al momento.",
             "queue_cleared": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha svuotato la coda delle canzoni.",
             "queue_embed_desc": "# <a:hellokittyshake:1193495018078482512> CODA CANZONI <a:hellokittyshake:1193495018078482512> # \n",
             "music_word": "Musica",
             "page_word": "Pagina"
+          }
+        },
+      "Utility": {
+        "language": {
+          "embed_desc": "Hey {interaction.user.mention}! Attualmente supporto le seguenti lingue:\n{languages_list}\n\n<a:hellokittyshake:1193495018078482512> Per favore, seleziona la lingua che vuoi che io usi in questo server dal menu in basso.",
+          "confirmation_message": "<a:hellokittyexcited:1193494992967180381> D'ora in poi comunichero' in: "
         }
-        }
+      }
     }
+}
 }

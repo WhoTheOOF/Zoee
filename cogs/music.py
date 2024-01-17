@@ -20,30 +20,10 @@ class SendMessage():
         except discord.NotFound as exception:
             return log.exception(exception)
     
-
 class Music(commands.Cog):
 
     def __init__(self, bot):
         self.bot= bot
-
-    async def rcm(self, 
-                  command: str, 
-                  event_to_call: str, 
-                  player: wavelink.Player = None, 
-                  track: wavelink.Playable = None,
-                  added_tracks: str = None,
-                  interaction: discord.Interaction = None,
-                  nome_filtro: str = None
-                  ) -> str:
-        """
-        Custom method to call when there's a message to be sent.
-        Parses the dicts:
-        - `self.bot.server_languages`
-        - `self.bot.translations`
-        
-        And returns a correctly formatted message in the server set language.
-        """
-        return await self.bot.reformat_message(str(self.bot.gslt(player.guild.id)["Music"][command][event_to_call]), player=player, track=track, added_tracks=added_tracks, interaction=interaction, nome_filtro=nome_filtro)
 
     @commands.Cog.listener()
     async def on_wavelink_websocket_closed(self, payload: wavelink.WebsocketClosedEventPayload):
@@ -76,7 +56,7 @@ class Music(commands.Cog):
         original: wavelink.Playable | None = payload.original
         track: wavelink.Playable = payload.track
 
-        embed: discord.Embed = discord.Embed(description=await self.rcm(command="play", event_to_call="track_start"), color=0xffc0cb)
+        embed: discord.Embed = discord.Embed(description=await self.bot.rcm(command="play", event_to_call="track_start", player=player, track=track), color=0xffc0cb)
 
         if track.artwork:
             embed.set_author(name=f"⇾ {track.author} ⇽", icon_url=f"{track.artwork}")
@@ -87,7 +67,7 @@ class Music(commands.Cog):
     
     @commands.Cog.listener()
     async def on_wavelink_inactive_player(self, player: wavelink.Player) -> None:
-        await player.channel.send(await self.rcm(command="play", event_to_call="track_start"))
+        await player.channel.send(await self.bot.rcm(command="play", event_to_call="track_start"))
         await player.disconnect()
 
         
@@ -118,10 +98,10 @@ class Music(commands.Cog):
             try:
                 player = await interaction.user.voice.channel.connect(cls=wavelink.Player, self_mute=False, self_deaf=True)  # type: ignore
             except AttributeError:
-                await SendMessage.as_followup_interaction(interaction=interaction, content=await self.rcm(command="play", event_to_call="AttributeError", player=player, track=track))
+                await SendMessage.as_followup_interaction(interaction=interaction, content=await interaction.client.rcm(command="play", event_to_call="AttributeError", player=player, track=track))
                 return
             except discord.ClientException:
-                await SendMessage.as_followup_interaction(interaction=interaction, content=await self.rcm(command="play", event_to_call="discord.ClientException", player=player, track=track))
+                await SendMessage.as_followup_interaction(interaction=interaction, content=await interaction.client.rcm(command="play", event_to_call="discord.ClientException", player=player, track=track))
                 return
 
         player.autoplay = wavelink.AutoPlayMode.partial
@@ -129,24 +109,24 @@ class Music(commands.Cog):
         if not hasattr(player, "home"):
             player.home = interaction.channel
         elif player.home != interaction.channel:
-            await SendMessage.as_followup_interaction(interaction=interaction, content=await self.rcm(command="play", event_to_call="interaction.channel_error", player=player, track=track))
+            await SendMessage.as_followup_interaction(interaction=interaction, content=await interaction.client.rcm(command="play", event_to_call="interaction.channel_error", player=player, track=track))
             return
 
         tracks: wavelink.Search = await wavelink.Playable.search(titolo_o_link)
         if not tracks:
-            await SendMessage.as_followup_interaction(interaction=interaction, content=await self.rcm(command="play", event_to_call="no_results", player=player, track=track))
+            await SendMessage.as_followup_interaction(interaction=interaction, content=await interaction.client.rcm(command="play", event_to_call="no_results", player=player, track=track))
             return
 
         if isinstance(tracks, wavelink.Playlist):
             for track in tracks:
                 track.extras = {"requester": interaction.user.mention}
             added: int = await player.queue.put_wait(tracks)
-            await SendMessage.as_followup_interaction(interaction=interaction, content=await self.rcm(command="play", event_to_call="added_playlist", player=player, track=track, added_tracks=added), eph=False)
+            await SendMessage.as_followup_interaction(interaction=interaction, content=await interaction.client.rcm(command="play", event_to_call="added_playlist", player=player, track=track, added_tracks=added), eph=False)
         else:
             track: wavelink.Playable = tracks[0]
             track.extras = {"requester": interaction.user.mention}
             await player.queue.put_wait(track)
-            await SendMessage.as_followup_interaction(interaction=interaction, content=await self.rcm(command="play", event_to_call="added_song", player=player, track=track), eph=False)
+            await SendMessage.as_followup_interaction(interaction=interaction, content=await interaction.client.rcm(command="play", event_to_call="added_song", player=player, track=track), eph=False)
 
         if not player.playing:
             await player.play(player.queue.get(), volume=100)
@@ -167,7 +147,7 @@ class Music(commands.Cog):
             return
 
         await player.skip(force=True)
-        await interaction.response.send_message(await self.rcm(command="skip", event_to_call="message", interaction=interaction))
+        await interaction.response.send_message(await interaction.client.rcm(command="skip", event_to_call="message", player=player, track=player.current, interaction=interaction))
     
     @app_commands.command(description="Applica un filtro alla canzone attuale!")
     async def filtro(self, interaction: discord.Interaction, nome_filtro: str) -> None:
@@ -213,7 +193,7 @@ class Music(commands.Cog):
                 filters.distortion.set(sin_offset=0.2, sin_scale=0.9, cos_offset=0.4, cos_scale=0.7, tan_offset=0.8, tan_scale=0.3, offset=0.6, scale=2.7)
                 
             await player.set_filters(filters)
-            await interaction.response.send_message(await self.rcm(command="filtro", event_to_call="message", nome_filtro=nome_filtro))
+            await interaction.response.send_message(await interaction.client.rcm(command="filtro", event_to_call="message", player=player, track=player.current, interaction=interaction, nome_filtro=nome_filtro))
     
     @filtro.autocomplete("nome_filtro")
     async def filtro_auto(self, interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
@@ -236,9 +216,9 @@ class Music(commands.Cog):
         if filters:
             filters.reset()
             await player.set_filters(filters)
-            await interaction.response.send_message(await self.rcm(command="nofiltro", event_to_call="message1"))
+            await interaction.response.send_message(await interaction.client.rcm(command="nofiltro", event_to_call="message1", player=player, track=player.current, interaction=interaction))
         else:
-            await interaction.response.send_message(await self.rcm(command="nofiltro", event_to_call="message2"))
+            await interaction.response.send_message(await interaction.client.rcm(command="nofiltro", event_to_call="message2", player=player, track=player.current, interaction=interaction))
 
 
     @app_commands.command(description="Stoppa o riprendi la riproduzione corrente")
@@ -249,7 +229,7 @@ class Music(commands.Cog):
             return
 
         await player.pause(not player.paused)
-        await interaction.response.send_message(await self.rcm(command="toggle", event_to_call="message"))
+        await interaction.response.send_message(await interaction.client.rcm(command="toggle", event_to_call="message", player=player, track=player.current, interaction=interaction))
 
     @app_commands.command(description="Alza o abbassa il volume della canzone (da 0 a 100)")
     async def volume(self, interaction: discord.Interaction, valore: int) -> None:
@@ -259,7 +239,7 @@ class Music(commands.Cog):
             return
 
         await player.set_volume(valore)
-        await interaction.response.send_message(await self.rcm(command="volume", event_to_call="message"))
+        await interaction.response.send_message(await interaction.client.rcm(command="volume", event_to_call="message", player=player, track=player.current, interaction=interaction))
 
 
     @app_commands.command(description="Disconnetti il bot dalla vocale")
@@ -270,7 +250,7 @@ class Music(commands.Cog):
             return
 
         await player.disconnect()
-        await interaction.response.send_message(await self.rcm(command="stop", event_to_call="message"))
+        await interaction.response.send_message(await interaction.client.rcm(command="stop", event_to_call="message", player=player, track=player.current, interaction=interaction))
         
     @app_commands.command(description="Visualizza tutte le canzoni in coda")
     async def queue(self, interaction: discord.Interaction, svuota: typing.Optional[str]) -> None:
@@ -280,15 +260,15 @@ class Music(commands.Cog):
             return
         
         if len(player.queue) <= 1:
-            return await interaction.response.send_message(await self.rcm(command="queue", event_to_call="no_queue"))
+            return await interaction.response.send_message(await interaction.client.rcm(command="queue", event_to_call="no_queue", player=player, track=player.current, interaction=interaction))
         
         if svuota:
             if svuota.lower() == "svuota la queue.":
                 player.queue.clear()
-                return await interaction.response.send_message(await self.rcm(command="queue", event_to_call="queue_cleared"))
+                return await interaction.response.send_message(await interaction.client.rcm(command="queue", event_to_call="queue_cleared", player=player, track=player.current, interaction=interaction))
         
         async def get_page(page: int):
-            emb = discord.Embed(description = await self.rcm(command="queue", event_to_call="queue_embed_desc"), color=0xffc0cb)
+            emb = discord.Embed(description = await interaction.client.rcm(command="queue", event_to_call="queue_embed_desc", player=player, track=player.current, interaction=interaction), color=0xffc0cb)
             offset = (page-1) * settings.MAX_EMBED_LENGHT
             
             index = 0
@@ -301,9 +281,9 @@ class Music(commands.Cog):
                 index = index + 1
                 emb.description += f"**`{index}`**) **{item.author}** ↪ {item.extras.requester}\n- [{item.title}]({item.uri}) | `{dt.strftime('%M:%S')}`\n\n"
                 
-            emb.set_author(name=f"{interaction.guild.name}" + await self.rcm(command="queue", event_to_call="music_word"), icon_url=interaction.guild.icon.url)
+            emb.set_author(name=f"{interaction.guild.name}" + await interaction.client.rcm(command="queue", event_to_call="music_word", player=player, track=player.current, interaction=interaction), icon_url=interaction.guild.icon.url)
             n = Pagination.compute_total_pages(len(player.queue), settings.MAX_EMBED_LENGHT)
-            emb.set_footer(text=await self.rcm(command="queue", event_to_call="page_word") + f" {page}/{n}")
+            emb.set_footer(text=await interaction.client.rcm(command="queue", event_to_call="page_word", player=player, track=player.current, interaction=interaction) + f" {page}/{n}")
             return emb, n
 
         await Pagination(interaction, get_page).navegate()

@@ -61,24 +61,52 @@ class Zoee(commands.Bot):
             dt = datetime.time(0, b, c)
         
         namespace = {
-            "{track.title}": track.title,
-            "{track.uri}": track.uri,
-            "{track.extras.requester}": track.extras.requester if track.extras.requester else '???',
-            "{dt.strftime('%M:%S')}": dt.strftime('%M:%S'),
-            "{track.author}": track.author,
+            "{track.title}": track.title if track else "???",
+            "{track.uri}": track.uri if track else "???",
+            "{track.extras.requester}": track.extras.requester if track else '???',
+            "{dt.strftime('%M:%S')}": dt.strftime('%M:%S') if track else None,
+            "{track.author}": track.author if track else "???",
             "{player.home.mention}": player.home.mention if player else "???",
             "{titolo_o_link}": query,
             "{added}": added_tracks,
-            "{track}": track,
-            "{tracks.name}": track.title,
-            "{tracks.url}": track.uri,
-            "{interaction.user.mention}": interaction.user.mention,
-            "{nome_filtro.upper()}": nome_filtro
+            "{track}": track if track else "???",
+            "{tracks.name}": track.title if track else "???",
+            "{tracks.url}": track.uri if track else "???",
+            "{interaction.user.mention}": interaction.user.mention if interaction else "???",
+            "{nome_filtro.upper()}": nome_filtro,
+            "{languages_list}": ":flag_gb: English | :flag_it: Italiano"
         }
         
         for k in namespace.keys():
             m = m.replace(k, str(namespace[k]))
         return m
+
+    async def rcm(self, 
+                  command: str, 
+                  event_to_call: str, 
+                  player: wavelink.Player = None, 
+                  track: wavelink.Playable = None,
+                  added_tracks: str = None,
+                  interaction: discord.Interaction = None,
+                  nome_filtro: str = None,
+                  module: str = "Music",
+                  guild_id: str = None
+                  ) -> str:
+        """
+        Custom method to call when there's a message to be sent.
+        Parses the dicts:
+        - `self.bot.server_languages`
+        - `self.bot.translations`
+        
+        And returns a correctly formatted message in the server set language.
+        """
+        
+        # check if guild_id is provided
+        if not guild_id:
+            if player:
+                guild_id = player.guild.id
+        
+        return await self.reformat_message(str(self.gslt(guild_id)[module][command][event_to_call]), player=player, track=track, added_tracks=added_tracks, interaction=interaction, nome_filtro=nome_filtro)
 
     async def setup_hook(self):
         

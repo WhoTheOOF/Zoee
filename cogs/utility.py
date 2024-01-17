@@ -4,6 +4,7 @@ from discord import app_commands
 import logging
 import typing
 from utils.functions import LanguageView
+import json
 
 logger = logging.getLogger("discord")
 
@@ -91,11 +92,25 @@ class Utility(commands.Cog):
     @app_commands.command(description="Set the bot language for the server!")
     async def language(self, interaction: discord.Interaction):
         embed = discord.Embed(
-            description = "# ATTENZIONE # - Questa e' una feature in **BETA**, pertanto potrebbero esserci bug e problemi.\n"
-            "- Seleziona la lingua che il bot deve usare nel server dal menu sotto!",
+            description = await interaction.client.rcm(module="Utility", command="language", event_to_call="embed_desc", guild_id=interaction.guild.id, interaction=interaction),
             color = 0xffc0cb
         )
-        await interaction.response.send_message(embed=embed, view=LanguageView(), ephemeral=True)
+        await interaction.response.send_message(embed=embed, view=LanguageView())
+
+    @app_commands.command()
+    @commands.is_owner()
+    async def pttdb(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        try:
+            with open('languages.json') as transl:
+                data = json.load(transl)
+
+            for lang, trsl in data['languages'].items():
+                await interaction.client.pool.execute("INSERT INTO translations (language_name, translate) VALUES ($1, $2) ON CONFLICT (language_name) DO UPDATE SET translate = $2", str(lang), json.dumps(trsl))
+                
+            return await interaction.followup.send(f"<a:hellokittyexcited:1193494992967180381> {interaction.user.mention} traduzioni aggiornate con successo.")
+        except Exception as exc:
+            return await interaction.followup.send(f"<a:cinnamonwave:1193494989280378890> {interaction.user.mention} qualcosa e' andato storto.. ```py\n{exc.with_traceback()}\n```")
 
     @commands.command()
     async def reload(self, ctx, module: str):
