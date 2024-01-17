@@ -37,5 +37,46 @@
             "page_word": "Page"
         }
         }
+    },
+
+"it":
+    {"Music":
+        {"play": {
+            "AttributeError": "<a:hellokittyangry:1193495024437047346> Entra in un canale vocale prima di usare questo comando.",
+            "discord.ClientException": "<a:hellokittyangry:1193495024437047346> Non ho i permessi necessari per entrare nel tuo canale vocale.",
+            "interaction.channel_error": "<a:hellokittyangry:1193495024437047346> Puoi usare questo comando solo in {player.home.mention}.",
+            "no_results": "<a:hellokittyangry:1193495024437047346> Nessun risultato trovato per **`{titolo_o_link}`**, riprova.",
+            "added_playlist": "<a:hellokittywave:1193495028874608773> La playlist **[{tracks.name}]({tracks.url})** ({added} traccie) e' stata aggiunta alla coda.",
+            "added_song": "<a:hellokittywave:1193495028874608773> **`{track}`** e' stata aggiunta alla coda.",
+            "track_start": "<a:hellokittyexcited:1193494992967180381> Riproducendo **[{track.title}]({track.uri})** (`{dt.strftime('%M:%S')}`) ({track.extras.requester})",
+            "timeout": "<a:hellokittyangry:1193495024437047346> Nessuna richiesta negli ultimi `5 Minuti`, sto uscendo."
+            },
+        "skip": {
+            "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha saltato la traccia attuale."
+        },
+        "filtro":{
+            "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha applicato il filtro **`{nome_filtro.upper()}`**."
+        },
+        "nofiltro": {
+            "message1": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha rimosso il filtro applicato.",
+            "message2": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} non ci sono filtri da rimuovere."
+        },
+        "toggle": {
+            "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha stoppato la riproduzione."
+        },
+        "volume": {
+            "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha impostato il volume a **`{player.volume}/100`**."
+        },
+        "stop": {
+            "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha disconnesso il bot."
+        },
+        "queue": {
+            "no_queue": "<a:8319hellokittyno:1193495006170861588> non ci sono canzoni in coda al momento.",
+            "queue_cleared": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha svuotato la coda delle canzoni.",
+            "queue_embed_desc": "# <a:hellokittyshake:1193495018078482512> CODA CANZONI <a:hellokittyshake:1193495018078482512> # \n",
+            "music_word": "Musica",
+            "page_word": "Pagina"
+        }
+        }
     }
 }
