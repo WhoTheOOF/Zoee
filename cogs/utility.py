@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 import logging
 import typing
-from cogs.music import SendMessage
+from utils.functions import LanguageView
 
 logger = logging.getLogger("discord")
 
@@ -87,6 +87,15 @@ class Utility(commands.Cog):
     
     def __init__(self, bot):
         self.bot = bot
+
+    @app_commands.command(description="Set the bot language for the server!")
+    async def language(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            description = "# ATTENZIONE # - Questa e' una feature in **BETA**, pertanto potrebbero esserci bug e problemi.\n"
+            "- Seleziona la lingua che il bot deve usare nel server dal menu sotto!",
+            color = 0xffc0cb
+        )
+        await interaction.response.send_message(embed=embed, view=LanguageView(), ephemeral=True)
 
     @commands.command()
     async def reload(self, ctx, module: str):

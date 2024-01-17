@@ -47,7 +47,7 @@ class Welcome(commands.Cog):
             'hi'
         ]
         
-        if message.guild.id == 1192455862464299058 and message.channel.id == 1192457359239417916 and any(i.lower() in message.content.lower() for i in valid_contents):
+        if message.guild.id == 1192455862464299058 and message.channel.id == 1192457359239417916 and message.content.startswith(tuple(valid_contents)):
             
             emojis = [
                 "<a:hellokittywave:1193495028874608773>",

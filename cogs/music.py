@@ -14,7 +14,7 @@ log = logging.getLogger("discord")
 
 class SendMessage():
 
-    async def as_followup_interaction(interaction: discord.Interaction, content: str, eph = True):
+    async def as_followup_interaction(interaction: discord.Interaction, content: str | discord.Embed, eph = True):
         try:
             await interaction.followup.send(content=content, ephemeral=eph)
         except discord.NotFound as exception:
@@ -56,28 +56,18 @@ class Music(commands.Cog):
         original: wavelink.Playable | None = payload.original
         track: wavelink.Playable = payload.track
 
-        seconds = track.length/1000
-        b = int((seconds % 3600)//60)
-        c = int((seconds % 3600) % 60)
-        dt = datetime.time(0, b, c)
-        tm = datetime.datetime.now(datetime.timezone.utc)
-
-        embed: discord.Embed = discord.Embed(description=f"<a:hellokittyexcited:1193494992967180381> Riproducendo **[{track.title}]({track.uri}) (`{dt.strftime('%M:%S')}`)** ({track.extras.requester if track.extras.requester else 'Anonimo'})", color=0xffc0cb)
-        embed.set_footer(text=f"Oggi alle {tm.strftime('%H:%M')}", icon_url=player.guild.icon.url)
+        embed: discord.Embed = discord.Embed(description=await self.bot.reformat_message(str(self.bot.gslt(player.guild.id)['Music']['play']['track_start']), player=player, track=track), color=0xffc0cb)
 
         if track.artwork:
             embed.set_author(name=f"⇾ {track.author} ⇽", icon_url=f"{track.artwork}")
         else:
             embed.set_author(name=f"⇾ {track.author} ⇽")
 
-        if original and original.recommended:
-            embed.description += f"\n\n`Questa canzone e' stata raccomandata da **`{track.source}`**"
-
         await player.home.send(embed=embed)
     
     @commands.Cog.listener()
     async def on_wavelink_inactive_player(self, player: wavelink.Player) -> None:
-        await player.channel.send(f"<a:hellokittyangry:1193495024437047346> Non e' stato riprodotto nulla per `5 minuti`, ci vediamo! ")
+        await player.channel.send(await self.bot.reformat_message(str(self.bot.gslt(player.guild.id)['Music']['play']['timeout'])))
         await player.disconnect()
 
     class MusicGroup(app_commands.Group):
@@ -109,10 +99,10 @@ class Music(commands.Cog):
                 try:
                     player = await interaction.user.voice.channel.connect(cls=wavelink.Player, self_mute=False, self_deaf=True)  # type: ignore
                 except AttributeError:
-                    await SendMessage.as_followup_interaction(interaction=interaction, content="<a:hellokittyangry:1193495024437047346> Entra in un canale vocale prima di usare questo comando.")
+                    await SendMessage.as_followup_interaction(interaction=interaction, content=await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['play']['AttributeError']), player=player, track=track))
                     return
                 except discord.ClientException:
-                    await SendMessage.as_followup_interaction(interaction=interaction, content="<a:hellokittyangry:1193495024437047346> Non ho i permessi per entrare nel canale vocale.")
+                    await SendMessage.as_followup_interaction(interaction=interaction, content=await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['play']['discord.ClientException']), player=player, track=track))
                     return
 
             player.autoplay = wavelink.AutoPlayMode.partial
@@ -120,24 +110,24 @@ class Music(commands.Cog):
             if not hasattr(player, "home"):
                 player.home = interaction.channel
             elif player.home != interaction.channel:
-                await SendMessage.as_followup_interaction(interaction=interaction, content=f"<a:hellokittyangry:1193495024437047346> Puoi usare questo comando solo in {player.home.mention}, non posso essere in piu' vocali contemporaneamente.")
+                await SendMessage.as_followup_interaction(interaction=interaction, content=await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['play']['interaction.channel_error']), player=player, track=track))
                 return
 
             tracks: wavelink.Search = await wavelink.Playable.search(titolo_o_link)
             if not tracks:
-                await SendMessage.as_followup_interaction(interaction=interaction, content=f"<a:hellokittyangry:1193495024437047346> Non ho trovato nessun risultato per **`{titolo_o_link}`**, riprova.")
+                await SendMessage.as_followup_interaction(interaction=interaction, content=await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['play']['no_results']), player=player, track=track))
                 return
 
             if isinstance(tracks, wavelink.Playlist):
                 for track in tracks:
                     track.extras = {"requester": interaction.user.mention}
                 added: int = await player.queue.put_wait(tracks)
-                await SendMessage.as_followup_interaction(interaction=interaction, content=f"<a:hellokittywave:1193495028874608773> Aggiunta la playlist **[{tracks.name}]({tracks.url})** ({added} traccie) alla coda.", eph=False)
+                await SendMessage.as_followup_interaction(interaction=interaction, content=await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['play']['added_playlist']), player=player, track=track, added_tracks=added), eph=False)
             else:
                 track: wavelink.Playable = tracks[0]
                 track.extras = {"requester": interaction.user.mention}
                 await player.queue.put_wait(track)
-                await SendMessage.as_followup_interaction(interaction=interaction, content=f"<a:hellokittywave:1193495028874608773> **`{track}`** è stata aggiunta alla coda delle canzoni.", eph=False)
+                await SendMessage.as_followup_interaction(interaction=interaction, content=await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['play']['added_song']), player=player, track=track), eph=False)
 
             if not player.playing:
                 await player.play(player.queue.get(), volume=100)
@@ -158,7 +148,7 @@ class Music(commands.Cog):
                 return
 
             await player.skip(force=True)
-            await interaction.response.send_message(f"<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha skippato la traccia attuale.")
+            await interaction.response.send_message(await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['skip']['message'])), interaction=interaction)
         
         @app_commands.command(description="Applica un filtro alla canzone attuale!")
         async def filtro(self, interaction: discord.Interaction, nome_filtro: str) -> None:
@@ -204,7 +194,7 @@ class Music(commands.Cog):
                     filters.distortion.set(sin_offset=0.2, sin_scale=0.9, cos_offset=0.4, cos_scale=0.7, tan_offset=0.8, tan_scale=0.3, offset=0.6, scale=2.7)
                     
                 await player.set_filters(filters)
-                await interaction.response.send_message(f"<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha impostato il filtro **`{nome_filtro.upper()}`**.")
+                await interaction.response.send_message(await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['filtro']['message']), nome_filtro=nome_filtro))
         
         @filtro.autocomplete("nome_filtro")
         async def filtro_auto(self, interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
@@ -227,9 +217,9 @@ class Music(commands.Cog):
             if filters:
                 filters.reset()
                 await player.set_filters(filters)
-                await interaction.response.send_message(f"<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha rimosso i filtri applicati alla canzone.")
+                await interaction.response.send_message(await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['nofiltro']['message1'])))
             else:
-                await interaction.response.send_message(f"<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} Non ci sono filtri applicati da rimuovere.")
+                await interaction.response.send_message(await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['nofiltro']['message2'])))
 
 
         @app_commands.command(description="Stoppa o riprendi la riproduzione corrente")
@@ -240,7 +230,7 @@ class Music(commands.Cog):
                 return
 
             await player.pause(not player.paused)
-            await interaction.response.send_message(f"<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha messo in pausa.")
+            await interaction.response.send_message(await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['toggle']['message'])))
 
         @app_commands.command(description="Alza o abbassa il volume della canzone (da 0 a 100)")
         async def volume(self, interaction: discord.Interaction, valore: int) -> None:
@@ -250,8 +240,7 @@ class Music(commands.Cog):
                 return
 
             await player.set_volume(valore)
-            await interaction.response.send_message(f"<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha modificato il volume a **`{player.volume}/100`**.")
-
+            await interaction.response.send_message(await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['volume']['message'])))
 
 
         @app_commands.command(description="Disconnetti il bot dalla vocale")
@@ -262,7 +251,7 @@ class Music(commands.Cog):
                 return
 
             await player.disconnect()
-            await interaction.response.send_message(f"<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha disconnesso il bot.")
+            await interaction.response.send_message(await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['stop']['message'])))
             
         @app_commands.command(description="Visualizza tutte le canzoni in coda")
         async def queue(self, interaction: discord.Interaction, svuota: typing.Optional[str]) -> None:
@@ -272,15 +261,15 @@ class Music(commands.Cog):
                 return
             
             if len(player.queue) <= 1:
-                return await interaction.response.send_message(f"<a:8319hellokittyno:1193495006170861588> E' presente solo una canzone al momento, che e' quella corrente.")
+                return await interaction.response.send_message(await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['queue']['no_queue'])))
             
             if svuota:
                 if svuota.lower() == "svuota la queue.":
                     player.queue.clear()
-                    return await interaction.response.send_message(f"<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha svuotato la queue.")
+                    return await interaction.response.send_message(await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['queue']['queue_cleared'])))
             
             async def get_page(page: int):
-                emb = discord.Embed(description = f"# <a:hellokittyshake:1193495018078482512> CODA CANZONI <a:hellokittyshake:1193495018078482512> # \n", color=0xffc0cb)
+                emb = discord.Embed(description = await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['queue']['queue_embed_desc'])), color=0xffc0cb)
                 offset = (page-1) * settings.MAX_EMBED_LENGHT
                 
                 index = 0
@@ -293,9 +282,9 @@ class Music(commands.Cog):
                     index = index + 1
                     emb.description += f"**`{index}`**) **{item.author}** ↪ {item.extras.requester}\n- [{item.title}]({item.uri}) | `{dt.strftime('%M:%S')}`\n\n"
                     
-                emb.set_author(name=f"{interaction.guild.name} Musica", icon_url=interaction.guild.icon.url)
+                emb.set_author(name=f"{interaction.guild.name}" + await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['queue']['music_word'])), icon_url=interaction.guild.icon.url)
                 n = Pagination.compute_total_pages(len(player.queue), settings.MAX_EMBED_LENGHT)
-                emb.set_footer(text=f"Pagina {page}/{n}")
+                emb.set_footer(text=await interaction.client.reformat_message(str(interaction.client.gslt(player.guild.id)['Music']['queue']['page_word'])) + f" {page}/{n}")
                 return emb, n
 
             await Pagination(interaction, get_page).navegate()

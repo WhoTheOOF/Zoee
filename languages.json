@@ -1,0 +1,39 @@
+{"Music": {
+    "play": {
+        "AttributeError": "<a:hellokittyangry:1193495024437047346> Join in a Voice Channel before using this command..",
+        "discord.ClientException": "<a:hellokittyangry:1193495024437047346> I don't have enough permissions to join your voice channel.",
+        "interaction.channel_error": "<a:hellokittyangry:1193495024437047346> You can use this command only in {player.home.mention}.",
+        "no_results": "<a:hellokittyangry:1193495024437047346> No results found for **`{titolo_o_link}`**, try again.",
+        "added_playlist": "<a:hellokittywave:1193495028874608773> Playlist **[{tracks.name}]({tracks.url})** ({added} tracks) added to the queue.",
+        "added_song": "<a:hellokittywave:1193495028874608773> **`{track}`** has been added to the queue.",
+        "track_start": "<a:hellokittyexcited:1193494992967180381> Now playing **[{track.title}]({track.uri})** (`{dt.strftime('%M:%S')}`) ({track.extras.requester})",
+        "timeout": "<a:hellokittyangry:1193495024437047346> Nothing has been requested for `5 Minutes`, leaving now."
+        },
+    "skip": {
+        "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha skippato la traccia attuale."
+    },
+    "filtro":{
+        "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha impostato il filtro **`{nome_filtro.upper()}`**."
+    },
+    "nofiltro": {
+        "message1": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha rimosso i filtri applicati alla canzone.",
+        "message2": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} Non ci sono filtri applicati da rimuovere."
+    },
+    "toggle": {
+        "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha messo in pausa."
+    },
+    "volume": {
+        "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha modificato il volume a **`{player.volume}/100`**."
+    },
+    "stop": {
+        "message": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha disconnesso il bot."
+    },
+    "queue": {
+        "no_queue": "<a:8319hellokittyno:1193495006170861588> E' presente solo una canzone al momento, che e' quella corrente.",
+        "queue_cleared": "<a:8319hellokittyno:1193495006170861588> {interaction.user.mention} ha svuotato la queue.",
+        "queue_embed_desc": "# <a:hellokittyshake:1193495018078482512> CODA CANZONI <a:hellokittyshake:1193495018078482512> # \n",
+        "music_word": "Music",
+        "page_word": "Page"
+    }
+    }
+}

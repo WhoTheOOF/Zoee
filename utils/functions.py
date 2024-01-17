@@ -1,13 +1,33 @@
 import discord
-from discord.ext import commands
-from discord import app_commands
-import asyncio
-import datetime
-import typing
 import logging
-import os
 
 log = logging.getLogger("discord")
+
+class LanguageSelect(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(label="English", description="Sets the default server language for the bot to English.", emoji="🇬🇧"),
+            discord.SelectOption(label="Italian", description="Imposta la lingua del server per il bot in Italiano", emoji="🇮🇹")
+        ]
+        
+        super().__init__(placeholder="Select your language", options=options, min_values=1, max_values=1)
+
+    async def callback(self, interaction: discord.Interaction):
+        
+        reformats = {
+            "English": "en",
+            "Italian": "it"
+        }
+        
+        await interaction.client.pool.execute("INSERT INTO server_languages (id, lang) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET lang = $2", interaction.guild.id, reformats[self.values[0]])       
+        interaction.client.server_languages[interaction.guild.id] = reformats[self.values[0]]
+        await interaction.response.defer()
+        await interaction.followup.send(f"<a:hellokittyexcited:1193494992967180381> Language has been set to **{self.values[0]}**", ephemeral=True)
+
+class LanguageView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(LanguageSelect())
 
 class BottoneNone(discord.ui.View):
     def __init__(self):

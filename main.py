@@ -11,6 +11,9 @@ from utils.functions import StaffAppButtons, BottoneNone
 import wavelink
 import logging.handlers
 import typing
+import asyncpg
+import json
+import datetime
 
 log = logging.getLogger("discord")
 
@@ -24,19 +27,88 @@ class Zoee(commands.Bot):
         intents.message_content = True
 
         super().__init__(
-            command_prefix=["zoe ", "z!", "<@1191841650444607588> "], 
+            command_prefix=["zoe ", "z!"], 
             intents=intents
         )
 
         self.ipc = ipc.Server(self, secret_key="Zoee")
+        self.pool: asyncpg.Pool = None
+        self.translations: dict = {}
+        self.server_languages: dict = {}
+        self.wavelink: wavelink.Player = None
+
+    def gslt(self, server_id: int):
+        current = self.server_languages[server_id]
+        if current:
+            return self.translations[current]
+        return None
+
+    async def reformat_message(self, m: str, 
+                               query = None, 
+                               interaction: discord.Interaction = None, 
+                               added_tracks = None, player: wavelink.Player = None, 
+                               track: wavelink.Playable = None,
+                               nome_filtro = None) -> str:
+        """
+        Simple helper function to reformat some variables
+        into their correct value, returning the formatted message.
+        """
+        
+        if track:
+            seconds = track.length/1000
+            b = int((seconds % 3600)//60)
+            c = int((seconds % 3600) % 60)
+            dt = datetime.time(0, b, c)
+        
+        namespace = {
+            "{track.title}": track.title,
+            "{track.uri}": track.uri,
+            "{track.extras.requester}": track.extras.requester if track.extras.requester else '???',
+            "{dt.strftime('%M:%S')}": dt.strftime('%M:%S'),
+            "{track.author}": track.author,
+            "{player.home.mention}": player.home.mention if player else "???",
+            "{titolo_o_link}": query,
+            "{added}": added_tracks,
+            "{track}": track,
+            "{tracks.name}": track.title,
+            "{tracks.url}": track.uri,
+            "{interaction.user.mention}": interaction.user.mention,
+            "{nome_filtro.upper()}": nome_filtro
+        }
+        
+        for k in namespace.keys():
+            m = m.replace(k, str(namespace[k]))
+        return m
 
     async def setup_hook(self):
+        
+        # Start the IPC server.
         await self.ipc.start()
         log.info("[IPC] IPC Server Started")
+        
+        # Connects to the Lavalink Server configured.
         nodes = [wavelink.Node(uri=settings.LAVALINK_INFO['server'], password=settings.LAVALINK_INFO['password'], inactive_player_timeout=300)]
         s = await wavelink.Pool.connect(nodes=nodes, client=self, cache_capacity=None)
-        log.info(f"Connesso a Lavalink: {s}")        
+        self.wavelink = s
+        log.info(f"Connesso a Lavalink: {s}")
         
+        # Connects to the Database configured.
+        self.pool = await asyncpg.create_pool(settings.DATABASE_URL)
+        log.info(f"Database Connected: {self.pool}")
+        
+        # Cache translations
+        translation = await bot.pool.fetch('SELECT * FROM translations')
+        for tr in translation:
+            self.translations[tr['language_name']] = json.loads(tr['translate'])
+            log.info("[CACHE] Translations Cached.")
+        
+        # Cache server languages
+        server_settings = await bot.pool.fetch("SELECT * FROM server_languages")
+        for server in server_settings:
+            self.server_languages[server['id']] = server['lang']
+            log.info("[CACHE] Server Languages Cached.")
+        
+        # Loads Cogs and Utilities from corresponding folders.
         await self.load_extension("jishaku")
         for cog_file in os.listdir("./cogs"):
             if cog_file.endswith(".py"):
@@ -48,6 +120,7 @@ class Zoee(commands.Bot):
                 await self.load_extension(f"utils.{file[:-3]}")
                 log.info(f"Caricato {file}.")
             
+        # Resume previously made Views.
         self.add_view(StaffAppButtons())
         self.add_view(BottoneNone())
 
@@ -57,7 +130,7 @@ class Zoee(commands.Bot):
 
     async def close(self):
         await self.async_cleanup()
-        
+        await self.pool.close()
         await super().close()
 
     @Server.route()
