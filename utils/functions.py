@@ -7,7 +7,9 @@ class LanguageSelect(discord.ui.Select):
     def __init__(self):
         options = [
             discord.SelectOption(label="English", description="Sets the default server language for the bot to English.", emoji="🇬🇧"),
-            discord.SelectOption(label="Italian", description="Imposta la lingua del server per il bot in Italiano.", emoji="🇮🇹")
+            discord.SelectOption(label="Italiano", description="Imposta la lingua del server per il bot in Italiano.", emoji="🇮🇹"),
+            discord.SelectOption(label="Albanian", description="Vendos gjuhën e serverit për bot në shqip.", emoji="🇦🇱"),
+            discord.SelectOption(label="Espanol", description="Establezca el idioma del servidor para el bot en español.", emoji="🇪🇸")
         ]
         
         super().__init__(placeholder="Select your language", options=options, min_values=1, max_values=1)
@@ -16,13 +18,22 @@ class LanguageSelect(discord.ui.Select):
         
         reformats = {
             "English": "en",
-            "Italian": "it"
+            "Italian": "it",
+            "Albanian": "sq",
+            "Espanol": "es"
+        }
+        
+        emoji = {
+            "English": ":flag_gb:",
+            "Italian": ":flag_it:",
+            "Albanian": ":flag_sq:",
+            "Espanol": ":flag_es:"
         }
         
         await interaction.client.pool.execute("INSERT INTO server_languages (id, lang) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET lang = $2", interaction.guild.id, reformats[self.values[0]])       
         interaction.client.server_languages[interaction.guild.id] = reformats[self.values[0]]
         await interaction.response.defer()
-        await interaction.followup.send(await interaction.client.rcm(module="Utility", command="language", event_to_call="confirmation_message", guild_id=interaction.guild.id, interaction=interaction) + f"**{self.values[0]}**")
+        await interaction.followup.send(await interaction.client.rcm(module="Utility", command="language", event_to_call="confirmation_message", guild_id=interaction.guild.id, interaction=interaction) + f"{emoji} **{self.values[0]}**")
 
 class LanguageView(discord.ui.View):
     def __init__(self):

@@ -34,7 +34,7 @@ class Boost(commands.Cog):
     async def on_member_update(self, before, after):
         if before.premium_since is not None and after.premium_since is None:
             db = discord.utils.get(after.guild.roles, id=1192951322350190783)
-            await self.bot.remove_roles(after, db)
+            await after.remove_roles(db)
         elif before.premium_since is None and after.premium_since is not None:
             tm = datetime.now(timezone.utc)
             channel = after.guild.get_channel(1192457359239417916)
